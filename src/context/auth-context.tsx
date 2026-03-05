@@ -57,10 +57,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq("id", userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "PGRST116") {
+          // Profile doesn't exist yet, which might happen immediately after signup
+          setProfile(null);
+          return;
+        }
+        throw error;
+      }
       setProfile(data);
-    } catch (error) {
-      console.error("Error fetching profile:", error);
+    } catch (error: any) {
+      console.error("Error fetching profile:", error.message || error);
     } finally {
       setLoading(false);
     }
