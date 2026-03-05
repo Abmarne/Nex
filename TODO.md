@@ -25,38 +25,38 @@ This todo list outlines the necessary steps to achieve the first release (MVP) o
 ## 🔐 3. Authentication & RBAC
 
 - [x] Implement Registration/Login flow for Businesses.
-- [ ] Implement Guest entry logic for Customers (optional login for MVP).
+- [x] Implement Guest entry logic for Customers (optional login for MVP).
 - [x] Handle role assignment upon user signup.
 
 ## 🏢 4. Business Dashboard
 
-- [ ] Create Dashboard Layout.
-- [ ] Implement "Create Queue" modal/form.
-- [ ] Build Live Queue View:
-  - [ ] List of waiting customers.
-  - [ ] Actions: "Serve Customer" (updates status to `served`).
-  - [ ] Actions: "Remove/Left" (updates status to `left`).
-- [ ] Implement QR Code generation for each queue to share with customers.
-- [ ] Build Analytics Tab:
-  - [ ] Total served count.
-  - [ ] Average wait time calculation.
+- [x] Create Dashboard Layout.
+- [x] Implement "Create Queue" modal/form.
+- [x] Build Live Queue View:
+  - [x] List of waiting customers.
+  - [x] Actions: "Serve Customer" (updates status to `served`).
+  - [x] Actions: "Remove/Left" (updates status to `left`).
+- [x] Implement QR Code generation for each queue to share with customers.
+- [x] Build Analytics Tab:
+  - [x] Total served count.
+  - [x] Average wait time calculation.
 
 ## 📱 5. Customer Interface
 
-- [ ] Build Queue Entry Page (Business name + "Join Queue" button).
-- [ ] Build Queue Status Page:
-  - [ ] Display Token Number.
-  - [ ] Display Current Position (calculated dynamically).
-  - [ ] Display Estimated Wait Time.
-- [ ] Implement "Leave Queue" button.
+- [x] Build Queue Entry Page (Business name + "Join Queue" button).
+- [x] Build Queue Status Page:
+  - [x] Display Token Number.
+  - [x] Display Current Position (calculated dynamically).
+  - [x] Display Estimated Wait Time.
+- [x] Implement "Leave Queue" button.
 
 ## 🔄 6. Real-time Features & Notifications
 
-- [ ] Integrate Supabase Realtime:
-  - [ ] Dashboard updates automatically when customers join/leave.
-  - [ ] Customer position updates automatically when someone is served.
-- [ ] Implement "Turn is Near" Notifications:
-  - [ ] Trigger notification (Email/Push) when position ≤ 3.
+- [x] Integrate Supabase Realtime:
+  - [x] Dashboard updates automatically when customers join/leave.
+  - [x] Customer position updates automatically when someone is served.
+- [x] Implement "Turn is Near" Notifications:
+  - [x] Trigger notification (Email/Push) when position ≤ 3.
 
 ## 🚀 7. Final Polish & Deployment
 

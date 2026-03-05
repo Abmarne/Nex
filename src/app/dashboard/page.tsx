@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Clock, CheckCircle2 } from "lucide-react";
+import { Plus, Users, CheckCircle2, ListOrdered } from "lucide-react";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -119,5 +119,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-import { ListOrdered } from "lucide-react";
