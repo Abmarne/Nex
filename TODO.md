@@ -48,7 +48,7 @@ This todo list outlines the necessary steps to achieve the first release (MVP) o
 
 - [x] Fix guest name storage and RLS for public access (Verified customer names show correctly).
 - [x] Ensure Mobile-First Responsive Design and real-time position updates (No refresh needed).
-- [ ] Perform End-to-End testing.
+- [x] Perform End-to-End testing.
 
 ---
 

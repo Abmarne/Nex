@@ -13,9 +13,11 @@ type Token = {
   id: string;
   position: number;
   status: 'waiting' | 'served' | 'left';
+  source: 'digital' | 'walk-in';
   created_at: string;
   customer_id: string | null;
   guest_name: string | null;
+  customer_email: string | null;
   users?: {
     name: string;
   };
@@ -33,6 +35,8 @@ export default function QueueDashboardPage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
+  const [manualName, setManualName] = useState("");
+  const [addingManual, setAddingManual] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -99,6 +103,9 @@ export default function QueueDashboardPage() {
 
   async function updateTokenStatus(tokenId: string, status: 'served' | 'left') {
     try {
+      // Get the token's position before updating
+      const currentToken = tokens.find(t => t.id === tokenId);
+      
       const { error } = await supabase
         .from("tokens")
         .update({ status })
@@ -106,10 +113,84 @@ export default function QueueDashboardPage() {
 
       if (error) throw error;
       
+      // If we served someone, check if we need to notify the person who is now #3 in line
+      if (status === 'served' && currentToken) {
+        notifyTurnNear(currentToken.position);
+      }
+
       // Optimistic update for better UX
       setTokens(prev => prev.map(t => t.id === tokenId ? { ...t, status } : t));
     } catch (error) {
       console.error("Error updating token status:", error);
+    }
+  }
+
+  async function notifyTurnNear(servedPosition: number) {
+    try {
+      // The person who is now 3rd in line is at position: servedPosition + 3
+      // (Because servedPosition is now served, servedPosition + 1 is #1, +2 is #2, +3 is #3)
+      const targetPosition = servedPosition + 3;
+      
+      const { data: tokenToNotify, error } = await supabase
+        .from("tokens")
+        .select("*")
+        .eq("queue_id", id)
+        .eq("position", targetPosition)
+        .eq("status", "waiting")
+        .single();
+      
+      if (error || !tokenToNotify || !tokenToNotify.customer_email) return;
+
+      console.log("Found customer to notify:", tokenToNotify.customer_email);
+
+      await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: tokenToNotify.customer_email,
+          name: tokenToNotify.guest_name || "Customer",
+          queueName: queue?.name || "the queue",
+          position: tokenToNotify.position
+        })
+      });
+    } catch (err) {
+      console.error("Error in notification flow:", err);
+    }
+  }
+
+  async function addManualCustomer(e: React.FormEvent) {
+    e.preventDefault();
+    if (!manualName.trim()) return;
+    
+    setAddingManual(true);
+    try {
+      // Calculate next position
+      const lastTokenPosition = tokens.length > 0 
+        ? Math.max(...tokens.map(t => t.position)) 
+        : 0;
+      const nextPosition = lastTokenPosition + 1;
+
+      const { data, error } = await supabase
+        .from("tokens")
+        .insert([{
+          queue_id: id,
+          guest_name: manualName,
+          position: nextPosition,
+          status: 'waiting',
+          source: 'walk-in'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setManualName("");
+      // Real-time subscription will handle the UI update, but we can do it optimistically too
+      setTokens(prev => [...prev, data]);
+    } catch (error) {
+      console.error("Error adding manual customer:", error);
+    } finally {
+      setAddingManual(false);
     }
   }
 
@@ -167,24 +248,47 @@ export default function QueueDashboardPage() {
             <Users size={20} className="text-primary" />
             Waiting ({waitingTokens.length})
           </h3>
+          
+          <Card className="border-dashed">
+            <CardContent className="p-4">
+              <form onSubmit={addManualCustomer} className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Add walk-in name..." 
+                  className="flex-1 bg-transparent border rounded px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  value={manualName}
+                  onChange={(e) => setManualName(e.target.value)}
+                  disabled={addingManual}
+                />
+                <Button size="sm" type="submit" disabled={addingManual || !manualName.trim()}>
+                  {addingManual ? "Adding..." : "Add Walk-in"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
           <div className="space-y-2">
             {waitingTokens.length === 0 ? (
               <p className="text-muted-foreground py-8 text-center border rounded-lg border-dashed">No customers waiting.</p>
             ) : (
               waitingTokens.map((token) => (
-                <Card key={token.id} className="border-l-4 border-l-primary">
+                <Card key={token.id} className={`border-l-4 ${token.source === 'walk-in' ? 'border-l-orange-400' : 'border-l-primary'}`}>
                   <CardContent className="flex items-center justify-between p-4">
-                    <div>
-                      <span className="text-2xl font-black text-primary mr-4">#{token.position}</span>
-                      <span className="font-medium">
-                        {(() => {
-                          // Try to get name from joined user data first, then guest_name
-                          const profileName = Array.isArray(token.users) 
-                            ? token.users[0]?.name 
-                            : (token.users as any)?.name;
-                          return token.guest_name || profileName || "Guest Customer";
-                        })()}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl font-black text-primary">#{token.position}</span>
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {(() => {
+                            const profileName = Array.isArray(token.users) 
+                              ? token.users[0]?.name 
+                              : (token.users as any)?.name;
+                            return token.guest_name || profileName || "Guest Customer";
+                          })()}
+                        </span>
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground/70">
+                          {token.source === 'walk-in' ? "🚶 Walk-in" : "📱 Digital"}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700" onClick={() => updateTokenStatus(token.id, 'served')}>
