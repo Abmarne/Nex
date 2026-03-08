@@ -4,7 +4,7 @@ import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard, ListOrdered, BarChart3, Menu, X, Calendar } from "lucide-react";
+import { LogOut, LayoutDashboard, ListOrdered, BarChart3, Menu, X, Calendar, Users, Gift } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -35,6 +35,8 @@ export default function DashboardLayout({
     { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
     { href: "/dashboard/queues", icon: ListOrdered, label: "My Queues" },
     { href: "/dashboard/appointments", icon: Calendar, label: "Appointments" },
+    { href: "/dashboard/staff", icon: Users, label: "Staff Management" },
+    { href: "/dashboard/loyalty", icon: Gift, label: "Loyalty Program" },
     { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
   ];
 

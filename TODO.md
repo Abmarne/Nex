@@ -58,7 +58,7 @@ This todo list outlines the necessary steps to achieve the first release (MVP) o
 - [x] **Unified Queue Management**: Seamlessly manage Walk-in and Digital customers in one list.
 - [x] **Appointment Scheduling**: Allow booking specific time slots alongside the live queue.
 - [x] **Advanced Analytics**: Peak hour calculation, staff performance, and demand forecasting.
-- [ ] **Multi-staff Management**: Allow multiple staff members to serve customers from the same queue.
-- [ ] **Loyalty Program**: Simple point-based rewards for returning customers.
+- [x] **Multi-staff Management**: Allow multiple staff members to serve customers from the same queue.
+- [x] **Loyalty Program**: Simple point-based rewards for returning customers.
 - [x] **PWA Support**: Allow businesses to install the dashboard as an app.
-- [ ] **Push Notifications**: Browser-based alerts for customers.
+- [x] **Push Notifications**: Browser-based alerts for customers.

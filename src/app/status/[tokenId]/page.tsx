@@ -14,10 +14,18 @@ export default function TokenStatusPage() {
   const [queue, setQueue] = useState<any>(null);
   const [position, setPosition] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
     if (tokenId) {
       fetchTokenData();
+
+      // Check for notification permission
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'granted') {
+          setNotificationsEnabled(true);
+        }
+      }
 
       // Realtime subscription for ALL changes to tokens in this queue
       const channel = supabase
@@ -36,6 +44,39 @@ export default function TokenStatusPage() {
       };
     }
   }, [tokenId]);
+
+  async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+      alert("This browser does not support desktop notification");
+      return;
+    }
+
+    if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setNotificationsEnabled(true);
+        new Notification("Notifications Enabled!", {
+          body: "We'll alert you when it's almost your turn.",
+          icon: "/favicon.ico"
+        });
+      }
+    }
+  }
+
+  function sendTurnAlert() {
+    if (notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification("Your turn is near!", {
+        body: `You are #${position} in line at ${queue?.name}. Please head to the counter.`,
+        icon: "/favicon.ico"
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (position !== null && position <= 3 && position > 0) {
+      sendTurnAlert();
+    }
+  }, [position]);
 
   async function fetchTokenData() {
     try {
@@ -175,6 +216,19 @@ export default function TokenStatusPage() {
               <RefreshCw size={16} />
               <span className="text-sm font-medium">Auto-updating in real-time</span>
             </div>
+            
+            {!notificationsEnabled && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary"
+                onClick={requestNotificationPermission}
+              >
+                <Zap size={14} />
+                Enable Browser Alerts
+              </Button>
+            )}
+
             <p className="text-sm text-muted-foreground">
               Please stay on this page. We'll alert you when it's almost your turn.
             </p>
