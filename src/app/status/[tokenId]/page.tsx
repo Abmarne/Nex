@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, Users, ArrowLeft, RefreshCw, Zap } from "lucide-react";
+import ArcadeGame from "@/components/ArcadeGame";
 
 export default function TokenStatusPage() {
   const { tokenId } = useParams();
@@ -239,6 +240,15 @@ export default function TokenStatusPage() {
             </Button>
           </CardFooter>
         </Card>
+
+        {queue?.arcade_enabled && (
+          <ArcadeGame 
+            queueId={queue.id} 
+            tokenId={token.id} 
+            guestName={token.guest_name || token.users?.name || "Guest"} 
+            arcadeReward={queue.arcade_reward}
+          />
+        )}
       </main>
 
       <footer className="p-8 text-center text-xs text-muted-foreground">

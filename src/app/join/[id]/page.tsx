@@ -24,7 +24,10 @@ export default function JoinQueuePage() {
   const [mode, setMode] = useState<'join' | 'schedule'>('join');
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [scheduledAt, setScheduledAt] = useState("");
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledHour, setScheduledHour] = useState("12");
+  const [scheduledMinute, setScheduledMinute] = useState("00");
+  const [scheduledAmPm, setScheduledAmPm] = useState("PM");
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [waitingCount, setWaitingCount] = useState<number | null>(null);
@@ -113,9 +116,15 @@ export default function JoinQueuePage() {
   }
 
   async function scheduleAppointment() {
-    if (!scheduledAt) return;
+    if (!scheduledDate) return;
     setJoining(true);
     try {
+      let hourStr = parseInt(scheduledHour);
+      if (scheduledAmPm === "PM" && hourStr !== 12) hourStr += 12;
+      if (scheduledAmPm === "AM" && hourStr === 12) hourStr = 0;
+      
+      const combinedDate = new Date(`${scheduledDate}T${hourStr.toString().padStart(2, '0')}:${scheduledMinute}:00`);
+
       const { data, error } = await supabase
         .from("appointments")
         .insert([{
@@ -124,7 +133,7 @@ export default function JoinQueuePage() {
           customer_id: user?.id || null,
           guest_name: name,
           guest_email: email || null,
-          scheduled_at: new Date(scheduledAt).toISOString(),
+          scheduled_at: combinedDate.toISOString(),
           status: 'scheduled'
         }])
         .select()
@@ -211,16 +220,52 @@ export default function JoinQueuePage() {
             </div>
 
             {mode === 'schedule' && (
-              <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                <Label htmlFor="date" className="text-sm font-bold tracking-wide uppercase opacity-70">Pick a Date & Time</Label>
-                <Input
-                  id="date"
-                  className="h-11 rounded-xl"
-                  type="datetime-local"
-                  value={scheduledAt}
-                  onChange={(e) => setScheduledAt(e.target.value)}
-                  required
-                />
+              <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                <div className="space-y-2">
+                  <Label htmlFor="date" className="text-sm font-bold tracking-wide uppercase opacity-70">Pick a Date</Label>
+                  <Input
+                    id="date"
+                    className="h-11 rounded-xl"
+                    type="date"
+                    value={scheduledDate}
+                    onChange={(e) => setScheduledDate(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold tracking-wide uppercase opacity-70">Pick a Time (12-Hour)</Label>
+                  <div className="flex gap-2">
+                    <select
+                      className="flex-1 h-11 rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={scheduledHour}
+                      onChange={(e) => setScheduledHour(e.target.value)}
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+                        <option key={h} value={h.toString().padStart(2, '0')}>{h}</option>
+                      ))}
+                    </select>
+                    <span className="flex items-center text-lg font-bold">:</span>
+                    <select
+                      className="flex-1 h-11 rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={scheduledMinute}
+                      onChange={(e) => setScheduledMinute(e.target.value)}
+                    >
+                      <option value="00">00</option>
+                      <option value="15">15</option>
+                      <option value="30">30</option>
+                      <option value="45">45</option>
+                    </select>
+                    <select
+                      className="flex-1 h-11 rounded-xl border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-black"
+                      value={scheduledAmPm}
+                      onChange={(e) => setScheduledAmPm(e.target.value)}
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
