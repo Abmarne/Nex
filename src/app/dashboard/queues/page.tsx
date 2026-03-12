@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ListOrdered, Play, Square, ExternalLink, Trash2 } from "lucide-react";
+import { Plus, ListOrdered, Play, Square, ExternalLink, Trash2, X } from "lucide-react";
 import Link from "next/link";
 
 type Queue = {
@@ -27,6 +27,8 @@ export default function QueuesPage() {
   const [arcadeEnabled, setArcadeEnabled] = useState(false);
   const [arcadeReward, setArcadeReward] = useState("");
   const [requirePartySize, setRequirePartySize] = useState(false);
+  const [preboardingEnabled, setPreboardingEnabled] = useState(false);
+  const [preboardingFields, setPreboardingFields] = useState<{id: string; label: string; type: string; options?: string[]; required?: boolean}[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -65,7 +67,9 @@ export default function QueuesPage() {
             status: "active",
             arcade_enabled: arcadeEnabled,
             arcade_reward: arcadeEnabled ? arcadeReward : null,
-            require_party_size: requirePartySize
+            require_party_size: requirePartySize,
+            preboarding_enabled: preboardingEnabled,
+            preboarding_fields: preboardingEnabled ? preboardingFields : []
           }
         ])
         .select()
@@ -77,6 +81,8 @@ export default function QueuesPage() {
       setArcadeEnabled(false);
       setArcadeReward("");
       setRequirePartySize(false);
+      setPreboardingEnabled(false);
+      setPreboardingFields([]);
       setIsCreating(false);
     } catch (error) {
       console.error("Error creating queue:", error);
@@ -189,6 +195,97 @@ export default function QueuesPage() {
                       onChange={(e) => setArcadeReward(e.target.value)}
                     />
                     <p className="text-[10px] text-muted-foreground mt-1">Customers can play "Speed Tapper" while waiting. The leaderboard creates an engaging wait experience!</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 p-4 bg-violet-50 rounded-lg border border-violet-100">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="preboarding_toggle"
+                    className="w-4 h-4 rounded text-violet-600 focus:ring-violet-500"
+                    checked={preboardingEnabled}
+                    onChange={(e) => setPreboardingEnabled(e.target.checked)}
+                  />
+                  <label htmlFor="preboarding_toggle" className="text-sm font-bold flex items-center gap-2 cursor-pointer">
+                    Enable Pre-boarding Form
+                    <span className="bg-violet-600 text-white text-[10px] px-2 py-0.5 rounded-full">Time Saver</span>
+                  </label>
+                </div>
+                {preboardingEnabled && (
+                  <div className="pt-2 pl-6 space-y-3 animate-in slide-in-from-top-2">
+                    <p className="text-[10px] text-muted-foreground">Customers fill these out while waiting. Responses are attached to their token for your staff.</p>
+                    
+                    {preboardingFields.map((field, idx) => (
+                      <div key={field.id} className="flex items-start gap-2 p-2 bg-white rounded-md border border-violet-100">
+                        <div className="flex-1 space-y-1">
+                          <input
+                            className="w-full bg-transparent text-sm font-medium border-b border-dashed focus:outline-none focus:border-violet-400 pb-0.5"
+                            value={field.label}
+                            placeholder="Field label"
+                            onChange={(e) => {
+                              const updated = [...preboardingFields];
+                              updated[idx].label = e.target.value;
+                              setPreboardingFields(updated);
+                            }}
+                          />
+                          <div className="flex gap-2">
+                            <select
+                              className="text-xs bg-violet-50 border border-violet-100 rounded px-1 py-0.5"
+                              value={field.type}
+                              onChange={(e) => {
+                                const updated = [...preboardingFields];
+                                updated[idx].type = e.target.value;
+                                if (e.target.value === 'select') updated[idx].options = ['Option 1'];
+                                setPreboardingFields(updated);
+                              }}
+                            >
+                              <option value="text">Short Text</option>
+                              <option value="textarea">Long Text</option>
+                              <option value="select">Dropdown</option>
+                            </select>
+                            <label className="flex items-center gap-1 text-xs">
+                              <input type="checkbox" checked={field.required || false} onChange={(e) => {
+                                const updated = [...preboardingFields];
+                                updated[idx].required = e.target.checked;
+                                setPreboardingFields(updated);
+                              }} />
+                              Required
+                            </label>
+                          </div>
+                          {field.type === 'select' && (
+                            <input
+                              className="w-full text-xs bg-transparent border-b border-dashed focus:outline-none focus:border-violet-400"
+                              placeholder="Comma-separated options (e.g. Coffee,Tea,Juice)"
+                              value={field.options?.join(',') || ''}
+                              onChange={(e) => {
+                                const updated = [...preboardingFields];
+                                updated[idx].options = e.target.value.split(',').map(s => s.trim());
+                                setPreboardingFields(updated);
+                              }}
+                            />
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="text-red-400 hover:text-red-600 p-0.5"
+                          onClick={() => setPreboardingFields(preboardingFields.filter((_, i) => i !== idx))}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-dashed border-violet-300 text-violet-600 hover:bg-violet-50 gap-1"
+                      onClick={() => setPreboardingFields([...preboardingFields, { id: `field_${Date.now()}`, label: '', type: 'text' }])}
+                    >
+                      <Plus size={14} /> Add Form Field
+                    </Button>
                   </div>
                 )}
               </div>

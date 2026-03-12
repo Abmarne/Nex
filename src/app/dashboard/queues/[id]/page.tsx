@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, CheckCircle2, XCircle, Share2, ArrowLeft } from "lucide-react";
+import { Users, CheckCircle2, XCircle, Share2, ArrowLeft, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Link from "next/link";
 
@@ -19,6 +19,7 @@ type Token = {
   guest_name: string | null;
   customer_email: string | null;
   party_size: number;
+  preboarding_data: Record<string, string> | null;
   users?: {
     name: string;
   };
@@ -29,6 +30,8 @@ type Queue = {
   name: string;
   status: 'active' | 'closed';
   require_party_size: boolean;
+  preboarding_enabled: boolean;
+  preboarding_fields: {id: string; label: string; type: string}[];
 };
 
 export default function QueueDashboardPage() {
@@ -40,6 +43,7 @@ export default function QueueDashboardPage() {
   const [manualName, setManualName] = useState("");
   const [manualPartySize, setManualPartySize] = useState("1");
   const [addingManual, setAddingManual] = useState(false);
+  const [expandedToken, setExpandedToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -312,6 +316,16 @@ export default function QueueDashboardPage() {
                             <Users size={12} /> {token.party_size}
                           </span>
                         )}
+                        {queue?.preboarding_enabled && token.preboarding_data && (
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 text-xs font-bold text-violet-600 bg-violet-100 w-fit px-1.5 py-0.5 rounded-md mt-1 hover:bg-violet-200 transition-colors"
+                            onClick={() => setExpandedToken(expandedToken === token.id ? null : token.id)}
+                          >
+                            <ClipboardList size={12} /> Pre-boarding
+                            {expandedToken === token.id ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -324,6 +338,18 @@ export default function QueueDashboardPage() {
                       </Button>
                     </div>
                   </CardContent>
+                  {expandedToken === token.id && token.preboarding_data && (
+                    <div className="px-4 pb-4 pt-0">
+                      <div className="bg-violet-50 rounded-lg p-3 space-y-2 border border-violet-100">
+                        {queue?.preboarding_fields?.map((field) => (
+                          <div key={field.id} className="flex flex-col">
+                            <span className="text-[10px] font-bold uppercase text-violet-500 tracking-wider">{field.label}</span>
+                            <span className="text-sm font-medium text-violet-900">{token.preboarding_data?.[field.id] || '—'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </Card>
               ))
             )}

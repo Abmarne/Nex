@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Clock, Users, ArrowLeft, RefreshCw, Zap } from "lucide-react";
 import ArcadeGame from "@/components/ArcadeGame";
+import PreboardingForm from "@/components/PreboardingForm";
 
 export default function TokenStatusPage() {
   const { tokenId } = useParams();
@@ -247,6 +248,14 @@ export default function TokenStatusPage() {
             tokenId={token.id} 
             guestName={token.guest_name || token.users?.name || "Guest"} 
             arcadeReward={queue.arcade_reward}
+          />
+        )}
+
+        {queue?.preboarding_enabled && queue?.preboarding_fields?.length > 0 && (
+          <PreboardingForm
+            tokenId={token.id}
+            fields={queue.preboarding_fields}
+            existingData={token.preboarding_data}
           />
         )}
       </main>
