@@ -35,9 +35,37 @@ export default function JoinQueuePage() {
 
   useEffect(() => {
     if (id) {
-      fetchQueue();
+      // Check for existing session for this queue
+      const existingTokenId = localStorage.getItem(`queue_token_${id}`);
+      if (existingTokenId) {
+        // Verify token is still active before redirecting
+        verifyExistingToken(existingTokenId);
+      } else {
+        fetchQueue();
+      }
     }
   }, [id]);
+
+  async function verifyExistingToken(tokenId: string) {
+    try {
+      const { data, error } = await supabase
+        .from("tokens")
+        .select("id, status")
+        .eq("id", tokenId)
+        .single();
+      
+      if (!error && data && data.status === 'waiting') {
+        router.push(`/status/${data.id}`);
+        return;
+      }
+      
+      // If token is invalid or already served, clear and show join page
+      localStorage.removeItem(`queue_token_${id}`);
+      fetchQueue();
+    } catch (err) {
+      fetchQueue();
+    }
+  }
 
   async function fetchQueue() {
     try {
@@ -109,6 +137,10 @@ export default function JoinQueuePage() {
         .single();
 
       if (error) throw error;
+      
+      // Save session for recovery
+      localStorage.setItem(`queue_token_${id}`, token.id);
+      
       router.push(`/status/${token.id}`);
     } catch (error) {
       console.error("Error joining queue:", error);

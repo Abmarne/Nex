@@ -26,13 +26,38 @@ type Appointment = {
 export default function AppointmentsPage() {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [queues, setQueues] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  
+  // Form state
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [selectedQueueId, setSelectedQueueId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchAppointments();
+      fetchQueues();
     }
   }, [user]);
+
+  async function fetchQueues() {
+    try {
+      const { data, error } = await supabase
+        .from("queues")
+        .select("id, name")
+        .eq("business_id", user?.id);
+      
+      if (error) throw error;
+      setQueues(data || []);
+      if (data && data.length > 0) setSelectedQueueId(data[0].id);
+    } catch (error) {
+      console.error("Error fetching queues:", error);
+    }
+  }
 
   async function fetchAppointments() {
     setLoading(true);
@@ -105,6 +130,44 @@ export default function AppointmentsPage() {
       if (error) throw error;
     } catch (error) {
       console.error("Error creating token from appointment:", error);
+    }
+  }
+
+  async function createAppointment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!guestName || !scheduledAt || !selectedQueueId) return;
+
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase
+        .from("appointments")
+        .insert([{
+          business_id: user?.id,
+          queue_id: selectedQueueId,
+          guest_name: guestName,
+          guest_email: guestEmail || null,
+          scheduled_at: new Date(scheduledAt).toISOString(),
+          status: 'scheduled'
+        }])
+        .select(`
+          *,
+          queues(name)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      setAppointments(prev => [...prev, data as Appointment]);
+      setIsCreating(false);
+      setGuestName("");
+      setGuestEmail("");
+      setScheduledAt("");
+      alert("Appointment created successfully!");
+    } catch (error: any) {
+      console.error("Error creating appointment:", error);
+      alert("Error: " + error.message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -189,11 +252,76 @@ export default function AppointmentsPage() {
           <h2 className="text-3xl font-extrabold tracking-tight">Appointments</h2>
           <p className="text-muted-foreground">Manage scheduled bookings and check-in your customers.</p>
         </div>
-        <Button className="gap-2 shadow-lg">
-          <Plus size={18} />
-          Create Appointment
+        <Button 
+          className="gap-2 shadow-lg" 
+          onClick={() => setIsCreating(!isCreating)}
+          variant={isCreating ? "outline" : "default"}
+        >
+          {isCreating ? <XCircle size={18} /> : <Plus size={18} />}
+          {isCreating ? "Cancel" : "Create Appointment"}
         </Button>
       </div>
+
+      {isCreating && (
+        <Card className="animate-in slide-in-from-top-4 duration-300">
+          <CardHeader>
+            <CardTitle>New Appointment</CardTitle>
+            <CardDescription>Schedule a customer for a future slot.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={createAppointment} className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-bold opacity-70">Customer Name</label>
+                <input
+                  className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  placeholder="John Doe"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold opacity-70">Email (Optional)</label>
+                <input
+                  type="email"
+                  className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  placeholder="john@example.com"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold opacity-70">Date & Time</label>
+                <input
+                  type="datetime-local"
+                  className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold opacity-70">Assign to Queue</label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  value={selectedQueueId}
+                  onChange={(e) => setSelectedQueueId(e.target.value)}
+                  required
+                >
+                  {queues.map(q => (
+                    <option key={q.id} value={q.id}>{q.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2 pt-2">
+                <Button type="submit" className="w-full md:w-auto px-12" disabled={submitting}>
+                  {submitting ? "Creating..." : "Confirm Appointment"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-8">
         {appointments.length === 0 ? (

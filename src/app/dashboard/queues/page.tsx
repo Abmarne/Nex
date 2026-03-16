@@ -37,6 +37,8 @@ export default function QueuesPage() {
   const [charityName, setCharityName] = useState("");
   const [charityLink, setCharityLink] = useState("");
   const [charityAmount, setCharityAmount] = useState(50);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -120,10 +122,7 @@ export default function QueuesPage() {
   }
 
   async function deleteQueue(id: string) {
-    if (!confirm("Are you sure you want to delete this queue? All tokens and data associated with it will be permanently removed.")) {
-      return;
-    }
-
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from("queues")
@@ -131,10 +130,15 @@ export default function QueuesPage() {
         .eq("id", id);
 
       if (error) throw error;
-      setQueues(queues.filter(q => q.id !== id));
-    } catch (error) {
+
+      setQueues(prev => prev.filter(q => q.id !== id));
+      alert("Queue deleted successfully!");
+    } catch (error: any) {
       console.error("Error deleting queue:", error);
-      alert("Failed to delete queue. Please try again.");
+      alert(`Failed to delete queue: ${error.message || "Unknown error"}`);
+    } finally {
+      setIsDeleting(false);
+      setConfirmDeleteId(null);
     }
   }
 
@@ -387,28 +391,60 @@ export default function QueuesPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Link href={`/dashboard/queues/${queue.id}`}>
-                    <Button variant="outline" className="gap-2">
-                      <ExternalLink size={16} />
-                      Live Dashboard
+                    <Button variant="outline" className="gap-2" size="sm">
+                      <ExternalLink size={14} />
+                      Dashboard
                     </Button>
                   </Link>
                   <Button 
                     variant="ghost" 
                     size="icon" 
+                    className="h-8 w-8"
                     onClick={() => toggleQueueStatus(queue.id, queue.status)}
                     title={queue.status === 'active' ? 'Close Queue' : 'Open Queue'}
                   >
-                    {queue.status === 'active' ? <Square size={18} className="fill-current" /> : <Play size={18} className="fill-current" />}
+                    {queue.status === 'active' ? <Square size={16} className="fill-current" /> : <Play size={16} className="fill-current" />}
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => deleteQueue(queue.id)}
-                    title="Delete Queue"
-                  >
-                    <Trash2 size={18} />
-                  </Button>
+                                 {confirmDeleteId === queue.id ? (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                      <span className="text-[10px] font-bold text-red-600 uppercase">Confirm?</span>
+                      <Button 
+                        size="sm" 
+                        variant="destructive" 
+                        className="h-8 px-2 text-[10px]"
+                        disabled={isDeleting}
+                        onClick={() => deleteQueue(queue.id)}
+                      >
+                        {isDeleting ? "..." : "YES"}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-8 px-2 text-[10px]"
+                        disabled={isDeleting}
+                        onClick={() => setConfirmDeleteId(null)}
+                      >
+                        NO
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-l pl-2 ml-1">
+                      <Button 
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2 gap-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setConfirmDeleteId(queue.id);
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        <span className="text-xs font-bold">DELETE</span>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -125,6 +125,10 @@ export default function TokenStatusPage() {
         .eq("id", tokenId);
 
       if (error) throw error;
+      
+      // Clear session when leaving
+      localStorage.removeItem(`queue_token_${token.queue_id}`);
+      
       router.push("/");
     } catch (error) {
       console.error("Error leaving queue:", error);
@@ -183,7 +187,10 @@ export default function TokenStatusPage() {
             <p className="font-medium">{queue?.name}</p>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" onClick={() => router.push("/")}>Back to Home</Button>
+            <Button className="w-full" onClick={() => {
+              if (token?.queue_id) localStorage.removeItem(`queue_token_${token.queue_id}`);
+              router.push("/");
+            }}>Back to Home</Button>
           </CardFooter>
         </Card>
       </div>
@@ -198,7 +205,10 @@ export default function TokenStatusPage() {
             <CardTitle>You left the queue</CardTitle>
           </CardHeader>
           <CardFooter>
-            <Button className="w-full" onClick={() => router.push("/")}>Back to Home</Button>
+            <Button className="w-full" onClick={() => {
+              if (token?.queue_id) localStorage.removeItem(`queue_token_${token.queue_id}`);
+              router.push("/");
+            }}>Back to Home</Button>
           </CardFooter>
         </Card>
       </div>
