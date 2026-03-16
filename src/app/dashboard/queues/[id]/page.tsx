@@ -19,6 +19,7 @@ type Token = {
   guest_name: string | null;
   customer_email: string | null;
   party_size: number;
+  snooze_count: number;
   preboarding_data: Record<string, string> | null;
   users?: {
     name: string;
@@ -314,6 +315,11 @@ export default function QueueDashboardPage() {
                         {queue?.require_party_size && token.party_size > 0 && (
                           <span className="flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 w-fit px-1.5 py-0.5 rounded-md mt-1">
                             <Users size={12} /> {token.party_size}
+                          </span>
+                        )}
+                        {token.snooze_count > 0 && (
+                          <span className="flex items-center gap-1 text-xs font-bold text-blue-600 bg-blue-100 w-fit px-1.5 py-0.5 rounded-md mt-1">
+                            💤 Snoozed ×{token.snooze_count}
                           </span>
                         )}
                         {queue?.preboarding_enabled && token.preboarding_data && (

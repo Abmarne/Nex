@@ -16,6 +16,10 @@ type Queue = {
   arcade_enabled: boolean;
   arcade_reward: string | null;
   require_party_size: boolean;
+  charity_fastpass_enabled: boolean;
+  charity_name: string | null;
+  charity_link: string | null;
+  charity_amount: number;
 };
 
 export default function QueuesPage() {
@@ -29,6 +33,10 @@ export default function QueuesPage() {
   const [requirePartySize, setRequirePartySize] = useState(false);
   const [preboardingEnabled, setPreboardingEnabled] = useState(false);
   const [preboardingFields, setPreboardingFields] = useState<{id: string; label: string; type: string; options?: string[]; required?: boolean}[]>([]);
+  const [charityEnabled, setCharityEnabled] = useState(false);
+  const [charityName, setCharityName] = useState("");
+  const [charityLink, setCharityLink] = useState("");
+  const [charityAmount, setCharityAmount] = useState(50);
 
   useEffect(() => {
     if (user) {
@@ -69,7 +77,11 @@ export default function QueuesPage() {
             arcade_reward: arcadeEnabled ? arcadeReward : null,
             require_party_size: requirePartySize,
             preboarding_enabled: preboardingEnabled,
-            preboarding_fields: preboardingEnabled ? preboardingFields : []
+            preboarding_fields: preboardingEnabled ? preboardingFields : [],
+            charity_fastpass_enabled: charityEnabled,
+            charity_name: charityEnabled ? charityName : null,
+            charity_link: charityEnabled ? charityLink : null,
+            charity_amount: charityAmount
           }
         ])
         .select()
@@ -81,8 +93,11 @@ export default function QueuesPage() {
       setArcadeEnabled(false);
       setArcadeReward("");
       setRequirePartySize(false);
-      setPreboardingEnabled(false);
       setPreboardingFields([]);
+      setCharityEnabled(false);
+      setCharityName("");
+      setCharityLink("");
+      setCharityAmount(50);
       setIsCreating(false);
     } catch (error) {
       console.error("Error creating queue:", error);
@@ -286,6 +301,57 @@ export default function QueuesPage() {
                     >
                       <Plus size={14} /> Add Form Field
                     </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="charity_toggle"
+                    className="w-4 h-4 rounded text-yellow-600 focus:ring-yellow-500"
+                    checked={charityEnabled}
+                    onChange={(e) => setCharityEnabled(e.target.checked)}
+                  />
+                  <label htmlFor="charity_toggle" className="text-sm font-bold flex items-center gap-2 cursor-pointer text-yellow-900">
+                    Enable Charity "Fast Pass"
+                    <span className="bg-yellow-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase">For Good 💛</span>
+                  </label>
+                </div>
+                {charityEnabled && (
+                  <div className="pt-2 pl-6 space-y-3 animate-in slide-in-from-top-2">
+                    <p className="text-[10px] text-yellow-800 font-medium">Allow customers to skip 3 spots by making a micro-donation. You verify the receipt on your dashboard!</p>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase text-yellow-700">Charity Name</label>
+                        <input
+                          className="flex h-8 w-full rounded-md border border-yellow-200 bg-white px-3 text-xs"
+                          placeholder="e.g. Red Cross"
+                          value={charityName}
+                          onChange={(e) => setCharityName(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase text-yellow-700">Min. Donation (₹)</label>
+                        <input
+                          type="number"
+                          className="flex h-8 w-full rounded-md border border-yellow-200 bg-white px-3 text-xs"
+                          value={charityAmount}
+                          onChange={(e) => setCharityAmount(parseInt(e.target.value) || 0)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-yellow-700">Donation Link (e.g. Website/UPI Page)</label>
+                      <input
+                        className="flex h-8 w-full rounded-md border border-yellow-200 bg-white px-3 text-xs"
+                        placeholder="https://charity.org/donate"
+                        value={charityLink}
+                        onChange={(e) => setCharityLink(e.target.value)}
+                      />
+                    </div>
                   </div>
                 )}
               </div>

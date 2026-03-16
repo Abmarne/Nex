@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Users, ArrowLeft, RefreshCw, Zap } from "lucide-react";
+import { Clock, Users, ArrowLeft, RefreshCw, Zap, Moon } from "lucide-react";
 import ArcadeGame from "@/components/ArcadeGame";
 import PreboardingForm from "@/components/PreboardingForm";
 
@@ -17,6 +17,7 @@ export default function TokenStatusPage() {
   const [position, setPosition] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [snoozing, setSnoozing] = useState(false);
 
   useEffect(() => {
     if (tokenId) {
@@ -130,6 +131,40 @@ export default function TokenStatusPage() {
     }
   }
 
+  async function snoozeQueue() {
+    if (!token || token.snooze_count >= 2) return;
+    setSnoozing(true);
+    try {
+      // Find the highest current position in the queue to know where to land
+      const { data: lastToken } = await supabase
+        .from("tokens")
+        .select("position")
+        .eq("queue_id", token.queue_id)
+        .eq("status", "waiting")
+        .order("position", { ascending: false })
+        .limit(1);
+
+      const maxPosition = lastToken?.[0]?.position || token.position;
+      // Bump 3 spots back, but don't go past the current tail of the queue
+      const newPosition = Math.min(token.position + 3, maxPosition + 1);
+
+      const { error } = await supabase
+        .from("tokens")
+        .update({
+          position: newPosition,
+          snooze_count: token.snooze_count + 1,
+        })
+        .eq("id", tokenId);
+
+      if (error) throw error;
+      // Real-time will refresh the data automatically
+    } catch (error) {
+      console.error("Error snoozing queue:", error);
+    } finally {
+      setSnoozing(false);
+    }
+  }
+
   if (loading) return <div className="flex min-h-screen items-center justify-center">Checking your position...</div>;
   if (!token) return <div className="flex min-h-screen items-center justify-center text-destructive">Token not found.</div>;
 
@@ -235,7 +270,24 @@ export default function TokenStatusPage() {
               Please stay on this page. We'll alert you when it's almost your turn.
             </p>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-2">
+            {/* Snooze Button - shown when not too close to front and snoozes remain */}
+            {position !== null && position > 3 && token.snooze_count < 2 && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+                onClick={snoozeQueue}
+                disabled={snoozing}
+              >
+                <Moon size={16} />
+                {snoozing ? "Snoozing..." : `Snooze — I Need More Time (${2 - token.snooze_count} left)`}
+              </Button>
+            )}
+            {token.snooze_count >= 2 && position !== null && position > 3 && (
+              <p className="text-xs text-muted-foreground text-center w-full">
+                💤 You've used both snoozes. Hang tight!
+              </p>
+            )}
             <Button variant="outline" className="w-full text-destructive hover:bg-destructive/5" onClick={leaveQueue}>
               Leave Queue
             </Button>
