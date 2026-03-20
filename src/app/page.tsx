@@ -25,7 +25,8 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-5xl text-center space-y-8">
+        <div className="container mx-auto max-w-5xl text-center space-y-8 flex flex-col items-center">
+          <Logo size={120} showText={false} className="drop-shadow-2xl" />
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
             <Zap size={14} className="fill-current" />
             Empowering Small Businesses

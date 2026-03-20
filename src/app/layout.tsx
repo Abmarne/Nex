@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "QueueEase | Effortless Real-time Queue Management",
   description: "Ditch the lines and empower your customers with digital token management. Real-time updates, no app required.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 import { AuthProvider } from "@/context/auth-context";
@@ -37,12 +40,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('Worker registration successful', registration.scope);
-                  }, function(err) {
-                    console.log('Worker registration failed: ', err);
-                  });
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for(let registration of registrations) {
+                    registration.unregister();
+                  }
                 });
               }
             `,
