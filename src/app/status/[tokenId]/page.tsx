@@ -219,113 +219,130 @@ export default function TokenStatusPage() {
   const estWaitTime = position ? (position - 1) * 5 : 0; // 5 mins per person
 
   return (
-    <div className="flex min-h-screen flex-col bg-primary/5">
-      <header className="p-4 flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/")}>
-          <ArrowLeft size={20} />
+    <div className="flex min-h-screen flex-col bg-background relative overflow-hidden">
+      {/* Immersive Background Glows */}
+      <div className="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vh] rounded-full bg-primary/10 blur-[130px] pointer-events-none -z-10" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vh] rounded-full bg-secondary/10 blur-[130px] pointer-events-none -z-10" />
+
+      <header className="p-6 flex items-center gap-4 relative z-10 border-b border-white/5">
+        <Button variant="ghost" size="icon" className="hover:bg-white/5 bg-black/20 backdrop-blur-md border border-white/5 rounded-full" onClick={() => router.push("/")}>
+          <ArrowLeft size={18} className="text-white" />
         </Button>
         <Logo size={24} />
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 gap-6">
-        <div className="text-center space-y-2">
-          <p className="text-muted-foreground uppercase tracking-widest text-sm font-bold">Your Token Number</p>
-          <h2 className="text-7xl font-black text-primary">#{token.position}</h2>
+      <main className="flex-1 flex flex-col items-center justify-start p-6 pt-12 gap-8 relative z-10">
+        
+        {/* Massive Typographic Hero Section */}
+        <div className="text-center w-full relative">
+          <p className="text-muted-foreground/60 uppercase tracking-[0.3em] text-[10px] font-black mb-6">Your Token Number</p>
+          <div className="relative inline-block">
+            {/* The soft glowing text effect */}
+            <h2 className="text-[8rem] xs:text-[10rem] font-black text-white leading-none tracking-tighter drop-shadow-[0_0_60px_rgba(0,112,243,0.3)]">
+              #{token.position}
+            </h2>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent mix-blend-overlay pointer-events-none" />
+          </div>
         </div>
 
+        {/* Dynamic State Alert */}
         {position !== null && position <= 3 && position > 0 && (
-          <div className="w-full max-w-sm bg-orange-100 border-2 border-orange-500 rounded-xl p-4 flex items-center gap-4 animate-bounce">
-            <div className="bg-orange-500 text-white p-2 rounded-full">
-              <Zap size={20} className="fill-current" />
+          <div className="w-full max-w-sm bg-[#1a1500]/80 backdrop-blur-md border border-amber-500/30 rounded-2xl p-5 flex items-center gap-5 shadow-[0_0_30px_rgba(245,158,11,0.15)] animate-in slide-in-from-bottom flex-shrink-0">
+            <div className="bg-gradient-to-br from-amber-400 to-orange-600 text-white p-3 rounded-xl shadow-inner">
+              <Zap size={24} className="fill-current" />
             </div>
             <div>
-              <p className="font-black text-orange-900 leading-tight">YOUR TURN IS NEAR!</p>
-              <p className="text-orange-800 text-xs">Please head to the counter now.</p>
+              <p className="font-black text-amber-500 leading-tight tracking-wide text-sm uppercase">PREPARE</p>
+              <p className="text-white text-base font-medium">Head to the counter immediately.</p>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-          <Card className="text-center p-4 bg-white/50 backdrop-blur">
-            <Users className="mx-auto mb-2 text-primary" size={24} />
-            <p className="text-xs text-muted-foreground uppercase font-bold">Your Position</p>
-            <p className="text-2xl font-bold">{position === 1 ? "NEXT" : position}</p>
+        {/* Bento Stats Grid */}
+        <div className="grid grid-cols-2 gap-4 w-full max-w-sm mt-4">
+          <Card className="text-center p-6 bg-white/[0.02] backdrop-blur-xl border-white/5 rounded-3xl shadow-lg relative overflow-hidden group">
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-20" />
+            <Users className="mx-auto mb-4 text-primary opacity-80" size={28} />
+            <p className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest mb-1">Ahead of you</p>
+            <p className="text-4xl font-black text-white">{position === 1 ? "NEXT" : (position || 0) - 1}</p>
           </Card>
-          <Card className="text-center p-4 bg-white/50 backdrop-blur">
-            <Clock className="mx-auto mb-2 text-primary" size={24} />
-            <p className="text-xs text-muted-foreground uppercase font-bold">Est. Wait</p>
-            <p className="text-2xl font-bold">{estWaitTime} min</p>
+          
+          <Card className="text-center p-6 bg-white/[0.02] backdrop-blur-xl border-white/5 rounded-3xl shadow-lg relative overflow-hidden">
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-secondary to-transparent opacity-20" />
+            <Clock className="mx-auto mb-4 text-secondary opacity-80" size={28} />
+            <p className="text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest mb-1">Est. Wait</p>
+            <p className="text-4xl font-black text-white">{estWaitTime}<span className="text-base text-muted-foreground ml-1">m</span></p>
           </Card>
         </div>
 
-        <Card className="w-full max-w-sm">
-          <CardContent className="p-6 text-center space-y-4">
-            <div className="flex items-center justify-center gap-2 text-primary animate-pulse">
-              <RefreshCw size={16} />
-              <span className="text-sm font-medium">Auto-updating in real-time</span>
+        {/* Interaction Panel */}
+        <Card className="w-full max-w-sm bg-[#121212]/80 backdrop-blur-xl border-white/5 rounded-3xl overflow-hidden mt-4 shadow-xl">
+          <CardContent className="p-6 text-center space-y-5">
+            <div className="flex items-center justify-center gap-2 text-primary/70 animate-pulse bg-primary/5 p-2 rounded-lg">
+              <RefreshCw size={14} />
+              <span className="text-xs font-bold uppercase tracking-widest">Live Sync Active</span>
             </div>
             
             {!notificationsEnabled && (
               <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary"
+                className="w-full gap-2 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 text-white rounded-xl h-12 shadow-sm font-bold tracking-wide transition-all"
                 onClick={requestNotificationPermission}
               >
-                <Zap size={14} />
-                Enable Browser Alerts
+                <Zap size={16} className="text-primary" />
+                Enable Push Alerts
               </Button>
             )}
 
-            <p className="text-sm text-muted-foreground">
-              Please stay on this page. We'll alert you when it's almost your turn.
+            <p className="text-xs text-muted-foreground/50 font-medium">
+              We'll alert you when it's almost your turn. You can close your phone.
             </p>
           </CardContent>
-          <CardFooter className="flex flex-col gap-2">
-            {/* Snooze Button - shown when not too close to front and snoozes remain */}
+          
+          <div className="border-t border-white/5 p-4 flex flex-col gap-3 bg-black/20">
+            {/* Snooze Button */}
             {position !== null && position > 3 && token.snooze_count < 2 && (
               <Button
                 variant="outline"
-                className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+                className="w-full gap-2 border-white/5 bg-transparent text-muted-foreground hover:bg-white/5 hover:text-white rounded-xl h-11"
                 onClick={snoozeQueue}
                 disabled={snoozing}
               >
                 <Moon size={16} />
-                {snoozing ? "Snoozing..." : `Snooze — I Need More Time (${2 - token.snooze_count} left)`}
+                {snoozing ? "Snoozing..." : `Pause & Step Back (${2 - token.snooze_count} left)`}
               </Button>
             )}
-            {token.snooze_count >= 2 && position !== null && position > 3 && (
-              <p className="text-xs text-muted-foreground text-center w-full">
-                💤 You've used both snoozes. Hang tight!
-              </p>
-            )}
-            <Button variant="outline" className="w-full text-destructive hover:bg-destructive/5" onClick={leaveQueue}>
-              Leave Queue
+            
+            <Button variant="ghost" className="w-full text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-xl h-11 font-bold tracking-wide" onClick={leaveQueue}>
+              Abandon Line
             </Button>
-          </CardFooter>
+          </div>
         </Card>
 
         {queue?.arcade_enabled && (
-          <ArcadeGame 
-            queueId={queue.id} 
-            tokenId={token.id} 
-            guestName={token.guest_name || token.users?.name || "Guest"} 
-            arcadeReward={queue.arcade_reward}
-          />
+          <div className="w-full max-w-sm mt-4">
+             <ArcadeGame 
+               queueId={queue.id} 
+               tokenId={token.id} 
+               guestName={token.guest_name || token.users?.name || "Guest"} 
+               arcadeReward={queue.arcade_reward}
+             />
+          </div>
         )}
 
         {queue?.preboarding_enabled && queue?.preboarding_fields?.length > 0 && (
-          <PreboardingForm
-            tokenId={token.id}
-            fields={queue.preboarding_fields}
-            existingData={token.preboarding_data}
-          />
+          <div className="w-full max-w-sm mt-4">
+             <PreboardingForm
+               tokenId={token.id}
+               fields={queue.preboarding_fields}
+               existingData={token.preboarding_data}
+             />
+          </div>
         )}
       </main>
 
-      <footer className="p-8 flex flex-col items-center gap-2">
-        <Logo showText={true} size={20} className="opacity-50 grayscale hover:grayscale-0 transition-all" />
-        <p className="text-[10px] text-muted-foreground">© 2026 QueueEase</p>
+      <footer className="p-8 pb-12 flex flex-col items-center justify-center gap-3 relative z-10 border-t border-white/5 mt-auto">
+        <Logo showText={true} size={18} className="opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500" />
+        <p className="text-[9px] text-muted-foreground/30 uppercase tracking-widest font-black">Powered by Nex</p>
       </footer>
     </div>
   );

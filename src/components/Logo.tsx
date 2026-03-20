@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import logoImage from "../../public/logo.png";
+import iconImage from "../../public/icon.png";
 
 interface LogoProps {
   className?: string;
@@ -16,18 +16,18 @@ const Logo: React.FC<LogoProps> = ({ className = "", size = 32, showText = true 
         style={{ width: size, height: size, minWidth: size }}
       >
         <Image 
-          src={logoImage} 
-          alt="QueueEase Logo"
+          src={iconImage} 
+          alt="Nex Logo"
           width={size}
           height={size}
-          className="object-cover shadow-sm rounded-xl"
+          className="object-contain drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]"
           priority
         />
       </div>
       
       {showText && (
-        <span className="font-black tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">
-          QueueEase
+        <span className="font-black tracking-tighter text-2xl bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-blue-400 uppercase">
+          Nex
         </span>
       )}
     </div>
@@ -35,3 +35,4 @@ const Logo: React.FC<LogoProps> = ({ className = "", size = 32, showText = true 
 };
 
 export default Logo;
+

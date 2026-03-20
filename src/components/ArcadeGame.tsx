@@ -89,92 +89,99 @@ export default function ArcadeGame({
   }
 
   return (
-    <Card className="w-full max-w-sm border-2 border-indigo-200 shadow-xl overflow-hidden bg-gradient-to-br from-indigo-50 to-purple-50">
-      <CardHeader className="bg-indigo-600 text-white text-center pb-6">
-        <CardTitle className="flex items-center justify-center gap-2 text-2xl font-black">
-          <Target size={28} />
+    <Card className="border-white/5 bg-[#121212]/80 backdrop-blur-2xl shadow-2xl rounded-[2rem] overflow-hidden text-white relative group w-full max-w-sm">
+      <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+      
+      <CardHeader className="bg-black/50 backdrop-blur-xl border-b border-white/5 pb-6 text-center relative z-10">
+        <CardTitle className="flex items-center justify-center gap-3 text-2xl font-black tracking-tight text-white mb-2">
+          <div className="p-2 rounded-xl bg-primary/20 text-primary border border-primary/30 shadow-[inset_0_0_15px_rgba(var(--color-primary),0.2)]">
+            <Target size={24} />
+          </div>
           Speed Tapper
         </CardTitle>
-        <CardDescription className="text-indigo-100 font-medium mt-1">
-          Kill time while you wait. Top the leaderboard!
+        <CardDescription className="text-muted-foreground/80 font-medium">
+          Command your reflexes. Top the leaderboard.
         </CardDescription>
         {arcadeReward && (
-          <div className="mt-3 bg-indigo-500/50 p-2 rounded-lg border border-indigo-400/50 inline-flex items-center gap-2 text-sm font-bold shadow-inner">
-            <Award size={16} className="text-yellow-300" />
-            <span className="text-yellow-100">Reward: {arcadeReward}</span>
+          <div className="mt-4 bg-primary/10 p-2.5 rounded-xl border border-primary/30 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.15em] shadow-[0_0_20px_-5px_var(--color-primary)]">
+            <Award size={16} className="text-primary" />
+            <span className="text-white">Bounty: <span className="text-primary">{arcadeReward}</span></span>
           </div>
         )}
       </CardHeader>
       
-      <CardContent className="p-6">
+      <CardContent className="p-8 relative z-10">
         {!playing && !gameOver && (
           <div className="text-center py-6">
-            <p className="text-lg font-bold text-indigo-900 mb-6">How fast can you tap in 10 seconds?</p>
+            <p className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-8">Execute taps in 10.00s</p>
             <Button 
               size="lg" 
-              className="w-full rounded-2xl h-16 text-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg hover:shadow-xl transition-all"
+              className="w-full rounded-2xl h-16 text-lg font-black uppercase tracking-widest bg-primary text-white border border-primary/50 hover:bg-primary/90 shadow-[0_0_30px_-5px_var(--color-primary)] hover:shadow-[0_0_40px_-5px_var(--color-primary)] transition-all gap-3"
               onClick={startGame}
             >
-              <Play fill="currentColor" className="mr-2" /> Start Challenge
+              <Play fill="currentColor" size={20} /> Initialize
             </Button>
           </div>
         )}
 
         {playing && (
           <div className="text-center">
-            <div className="flex justify-between items-center mb-6 px-4">
+            <div className="flex justify-between items-center mb-10 px-6 border border-white/5 bg-black/40 rounded-2xl p-4 shadow-inner">
               <div className="text-center">
-                <p className="text-xs font-bold uppercase text-indigo-400">Time</p>
-                <p className={`text-4xl font-black ${timeLeft <= 3 ? 'text-red-500 animate-pulse' : 'text-indigo-900'}`}>{timeLeft}s</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">Timer</p>
+                <p className={`text-5xl font-black ${timeLeft <= 3 ? 'text-red-500 animate-pulse drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'text-primary drop-shadow-[0_0_15px_var(--color-primary)]'}`}>{timeLeft}</p>
               </div>
+              <div className="h-12 w-px bg-white/10" />
               <div className="text-center">
-                <p className="text-xs font-bold uppercase text-indigo-400">Score</p>
-                <p className="text-4xl font-black text-indigo-900">{score}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2">Hits</p>
+                <p className="text-5xl font-black text-white">{score}</p>
               </div>
             </div>
             
             <button 
               onClick={handleTap}
-              className="w-full aspect-square max-h-48 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full shadow-[0_10px_0_0_rgba(67,56,202,1)] active:shadow-[0_2px_0_0_rgba(67,56,202,1)] active:translate-y-2 transition-all flex items-center justify-center text-white select-none touch-manipulation"
+              className="w-[200px] h-[200px] mx-auto rounded-full bg-primary relative border border-primary/50 shadow-[0_15px_0_0_rgba(0,112,243,0.5),auto_auto_30px_rgba(0,112,243,0.3)] active:shadow-[0_2px_0_0_rgba(0,112,243,0.5),auto_auto_40px_rgba(0,112,243,0.6)] active:translate-y-[13px] transition-all flex items-center justify-center text-white select-none touch-manipulation overflow-hidden outline-none"
             >
-              <span className="text-4xl font-black tracking-widest uppercase opacity-80 pointer-events-none">TAP!</span>
+               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+               <div className="absolute top-4 left-1/2 -translate-x-1/2 w-3/4 h-12 bg-white/20 blur-xl rounded-full pointer-events-none" />
+              <span className="text-3xl font-black tracking-[0.2em] uppercase origin-center relative z-10 pointer-events-none">STRIKE</span>
             </button>
           </div>
         )}
 
         {gameOver && (
-          <div className="text-center py-4 animate-in zoom-in duration-300">
-            <p className="text-sm font-bold uppercase text-indigo-400 mb-1">Time's Up!</p>
-            <p className="text-6xl font-black text-indigo-900 mb-2">{score}</p>
-            <p className="text-sm font-medium text-indigo-600 mb-6">Taps in 10 seconds</p>
+          <div className="text-center py-6 animate-in zoom-in duration-500">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4">Sequence Terminated</p>
+            <p className="text-[5rem] leading-none font-black text-white drop-shadow-[0_0_20px_var(--color-primary)] mb-4">{score}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-primary/80 mb-8 border border-primary/20 bg-primary/5 inline-block px-4 py-1.5 rounded-full">Hits Logged</p>
             
-            <Button variant="outline" className="w-full font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={startGame}>
-              <RefreshCw size={16} className="mr-2" /> Play Again
+            <Button className="w-full rounded-2xl h-14 font-black uppercase tracking-widest gap-2 bg-white/5 text-white border border-white/10 hover:bg-white/10 shadow-lg transition-all" onClick={startGame}>
+              <RefreshCw size={18} /> Relaunch
             </Button>
           </div>
         )}
 
         {/* Leaderboard */}
-        <div className="mt-8 pt-6 border-t border-indigo-100">
-          <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-indigo-800 mb-4">
-            <Trophy size={16} className="text-yellow-500" /> Live Leaderboard
+        <div className="mt-10 pt-8 border-t border-white/5">
+          <h4 className="flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-6">
+            <Trophy size={14} className="text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]" /> Live Standings
           </h4>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             {leaderboard.length === 0 ? (
-              <p className="text-xs text-center p-4 bg-indigo-50/50 rounded-lg text-indigo-400 font-medium">Be the first to set a score!</p>
+              <p className="text-[10px] tracking-widest uppercase text-center p-6 bg-black/40 border border-white/5 rounded-2xl text-muted-foreground/60 font-black">Awaiting Entries...</p>
             ) : (
               leaderboard.map((entry, idx) => (
-                <div key={entry.id} className="flex items-center justify-between p-2 rounded-lg bg-white border border-indigo-50 shadow-sm relative overflow-hidden">
-                  {idx === 0 && <div className="absolute inset-y-0 left-0 w-1 bg-yellow-400"></div>}
-                  {idx === 1 && <div className="absolute inset-y-0 left-0 w-1 bg-slate-300"></div>}
-                  {idx === 2 && <div className="absolute inset-y-0 left-0 w-1 bg-orange-300"></div>}
+                <div key={entry.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-black/40 border border-white/5 hover:bg-white/5 shadow-inner relative overflow-hidden transition-colors">
+                  {idx === 0 && <div className="absolute inset-y-0 left-0 w-1 bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,1)]"></div>}
+                  {idx === 1 && <div className="absolute inset-y-0 left-0 w-1 bg-white/60"></div>}
+                  {idx === 2 && <div className="absolute inset-y-0 left-0 w-1 bg-orange-700"></div>}
                   
-                  <div className="flex items-center gap-3 pl-2">
-                    <span className={`font-black text-sm w-4 text-center ${idx === 0 ? 'text-yellow-500' : idx === 1 ? 'text-slate-400' : idx === 2 ? 'text-orange-400' : 'text-indigo-200'}`}>{idx + 1}</span>
-                    <span className="font-bold text-indigo-900 text-sm">{entry.guest_name}</span>
+                  <div className="flex items-center gap-4 pl-3">
+                    <span className={`font-black text-[10px] px-2 py-0.5 rounded-md ${idx === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : idx === 1 ? 'bg-white/10 text-white/80 border border-white/20' : idx === 2 ? 'bg-orange-700/20 text-orange-500 border border-orange-700/30' : 'text-muted-foreground/50'}`}>#{idx + 1}</span>
+                    <span className="font-bold text-white text-sm truncate max-w-[120px]">{entry.guest_name}</span>
                   </div>
-                  <span className="font-black text-indigo-600">{entry.score}</span>
+                  <span className={`font-black tracking-tighter ${idx === 0 ? 'text-amber-500' : 'text-primary'}`}>{entry.score}</span>
                 </div>
               ))
             )}

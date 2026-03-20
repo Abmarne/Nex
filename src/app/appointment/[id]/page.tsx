@@ -178,7 +178,7 @@ export default function AppointmentStatusPage() {
       </main>
 
       <footer className="p-8 text-center text-xs text-muted-foreground">
-        Powered by QueueEase
+        Powered by Nex
       </footer>
     </div>
   );

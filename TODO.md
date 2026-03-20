@@ -1,6 +1,6 @@
-# QueueEase MVP Todo List 🚀
+# Nex MVP Todo List 🚀
 
-This todo list outlines the necessary steps to achieve the first release (MVP) of QueueEase, based on the Product Requirements Document and Design specifications.
+This todo list outlines the necessary steps to achieve the first release (MVP) of Nex, based on the Product Requirements Document and Design specifications.
 
 ## ✅ 1. Project Initialization
 

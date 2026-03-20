@@ -1,10 +1,10 @@
 📄 Product Requirements Document (PRD)
-Product Name (Working Title): QueueEase
+Product Name (Working Title): Nex
 Version: 1.0 (Freeware MVP)
 Tech Stack: Next.js (frontend + backend API routes), Supabase (database + auth + realtime), Vercel (hosting)
 
 1. Overview
-QueueEase is a digital queue management system designed for small businesses (clinics, salons, shops) to replace physical waiting lines with digital tokens. Customers can join queues remotely, track their position, and receive notifications when their turn is near.
+Nex is a digital queue management system designed for small businesses (clinics, salons, shops) to replace physical waiting lines with digital tokens. Customers can join queues remotely, track their position, and receive notifications when their turn is near.
 
 2. Objectives
 - Reduce customer wait-time frustration.
