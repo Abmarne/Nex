@@ -13,14 +13,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nex | Real-time Digital Queue Management System",
-  description: "Ditch the lines and empower your customers with digital token management. Real-time updates, no app required. The ultimate digital waitlist software for businesses.",
-  keywords: ["queue management", "digital waitlist", "virtual queue", "restaurant waitlist", "clinic queue system", "queue software"],
+  title: "Nex | The High-Performance Digital Queue Platform",
+  description: "Experience the future of waiting with Nex. A high-performance, real-time digital queue management system for modern businesses. Frictionless tokens, zero-install access, and live updates.",
+  keywords: ["nex", "nex queue", "digital queue", "virtual waitlist", "queue management", "real-time queueing", "line manager", "digital terminal", "clinic queue system", "salon waitlist"],
   authors: [{ name: "Nex" }],
   openGraph: {
-    title: "Nex | Real-time Digital Queue Management",
-    description: "The ultimate zero-friction waiting line manager. No apps to download. No hardware to buy.",
-    url: "https://queue-ease-umber.vercel.app",
+    title: "Nex | Next-Gen Queue Management",
+    description: "The ultimate zero-friction waiting line manager. Real-time digital tokens for modern businesses.",
+    url: "https://nex-lovat.vercel.app",
     siteName: "Nex",
     images: [
       {
@@ -34,8 +34,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nex | Wait List Software",
-    description: "The ultimate zero-friction waiting line manager.",
+    title: "Nex | High-Performance Wait List Software",
+    description: "The ultimate zero-friction digital queue manager.",
     images: ["/icon.png"],
   },
   verification: {

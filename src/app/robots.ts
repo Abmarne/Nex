@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/dashboard/', '/api/'], // Prevents Google from trying to index private dashboards
     },
-    sitemap: 'https://queue-ease-umber.vercel.app/sitemap.xml',
+    sitemap: 'https://nex-lovat.vercel.app/sitemap.xml',
   };
 }

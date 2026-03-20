@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://queue-ease-umber.vercel.app'; 
+  const baseUrl = 'https://nex-lovat.vercel.app'; 
 
   return [
     {
