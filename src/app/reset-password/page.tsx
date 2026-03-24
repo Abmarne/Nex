@@ -19,6 +19,15 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
 
+  const requirements = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  };
+
+  const isPasswordStrong = Object.values(requirements).every(Boolean);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -26,6 +35,12 @@ export default function ResetPasswordPage() {
 
     if (password !== confirmPassword) {
       setError("Matrices mismatch (Passwords don't match)");
+      setLoading(false);
+      return;
+    }
+
+    if (!isPasswordStrong) {
+      setError("Password does not meet security protocols.");
       setLoading(false);
       return;
     }
@@ -83,6 +98,14 @@ export default function ResetPasswordPage() {
                     onChange={(e) => setPassword(e.target.value)} 
                     required 
                   />
+                  {password.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mt-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                      <Requirement label="8+ Characters" met={requirements.length} />
+                      <Requirement label="Uppercase" met={requirements.uppercase} />
+                      <Requirement label="Number" met={requirements.number} />
+                      <Requirement label="Symbol" met={requirements.special} />
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2 group/input">
                   <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-white/50 group-focus-within/input:text-secondary transition-colors">Confirm New Password</Label>
@@ -131,6 +154,15 @@ export default function ResetPasswordPage() {
           </CardFooter>
         </form>
       </Card>
+    </div>
+  );
+}
+
+function Requirement({ label, met }: { label: string; met: boolean }) {
+  return (
+    <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${met ? "text-emerald-500" : "text-white/20"}`}>
+      <div className={`h-1 w-1 rounded-full ${met ? "bg-emerald-500" : "bg-white/20"}`} />
+      {label}
     </div>
   );
 }

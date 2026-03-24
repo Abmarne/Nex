@@ -21,6 +21,18 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  const getPasswordRequirements = (pass: string) => {
+    return {
+      length: pass.length >= 8,
+      uppercase: /[A-Z]/.test(pass),
+      number: /[0-9]/.test(pass),
+      special: /[^A-Za-z0-9]/.test(pass),
+    };
+  };
+
+  const requirements = getPasswordRequirements(password);
+  const isPasswordStrong = Object.values(requirements).every(Boolean);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -28,6 +40,11 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       if (mode === "register") {
+        if (!isPasswordStrong) {
+          setError("Password does not meet security protocols.");
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -114,6 +131,26 @@ export function AuthForm({ mode }: AuthFormProps) {
               onChange={(e) => setPassword(e.target.value)} 
               required 
             />
+            {mode === "register" && password.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 mt-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                <Requirement 
+                  label="8+ Characters" 
+                  met={requirements.length} 
+                />
+                <Requirement 
+                  label="Uppercase" 
+                  met={requirements.uppercase} 
+                />
+                <Requirement 
+                  label="Number" 
+                  met={requirements.number} 
+                />
+                <Requirement 
+                  label="Symbol" 
+                  met={requirements.special} 
+                />
+              </div>
+            )}
           </div>
           {error && <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] uppercase font-bold tracking-widest p-3 rounded-lg text-center animate-in slide-in-from-top-2">{error}</div>}
         </CardContent>
@@ -145,5 +182,14 @@ export function AuthForm({ mode }: AuthFormProps) {
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+function Requirement({ label, met }: { label: string; met: boolean }) {
+  return (
+    <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${met ? "text-emerald-500" : "text-white/20"}`}>
+      <div className={`h-1 w-1 rounded-full ${met ? "bg-emerald-500" : "bg-white/20"}`} />
+      {label}
+    </div>
   );
 }
