@@ -97,7 +97,14 @@ export function AuthForm({ mode }: AuthFormProps) {
             />
           </div>
           <div className="space-y-2 group/input">
-            <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-white/50 group-focus-within/input:text-primary transition-colors">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-white/50 group-focus-within/input:text-primary transition-colors">Password</Label>
+              {mode === "login" && (
+                <Link href="/forgot-password" title="Forgot Password?" className="text-[9px] font-black tracking-widest uppercase text-muted-foreground/60 hover:text-primary transition-colors">
+                  Forgot Password?
+                </Link>
+              )}
+            </div>
             <Input 
               id="password" 
               type="password" 
