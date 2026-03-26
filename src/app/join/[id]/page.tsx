@@ -75,7 +75,14 @@ export default function JoinQueuePage() {
         .from("queues")
         .select(`
           *,
-          users(name)
+          users(
+            name,
+            business_name,
+            address,
+            phone,
+            bio,
+            website
+          )
         `)
         .eq("id", id)
         .single();
@@ -98,6 +105,21 @@ export default function JoinQueuePage() {
       setLoading(false);
     }
   }
+
+  const businessInfo = queue?.users;
+  const jsonLd = queue ? {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": businessInfo?.business_name || businessInfo?.name || queue.name,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": businessInfo?.address || "Available on request",
+    },
+    "telephone": businessInfo?.phone || "",
+    "url": `https://nex-lovat.vercel.app/join/${id}`,
+    "image": "https://nex-lovat.vercel.app/icon.png",
+    "description": businessInfo?.bio || `Join the digital queue for ${queue.name}. Real-time waitlist management.`
+  } : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -192,6 +214,12 @@ export default function JoinQueuePage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/30 p-4 gap-8">
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       <Link href="/">
         <Logo size={40} />
       </Link>
@@ -199,8 +227,13 @@ export default function JoinQueuePage() {
         <CardHeader className="text-center pb-2">
           <CardTitle className="text-3xl font-black">{queue.name}</CardTitle>
           <CardDescription className="text-base font-medium">
-            by {queue.users?.name || "Business"}
+            by {businessInfo?.business_name || businessInfo?.name || "Business"}
           </CardDescription>
+          {businessInfo?.address && (
+            <p className="text-[10px] text-muted-foreground mt-2 opacity-80 uppercase tracking-[0.2em] font-black border-t border-white/5 pt-2">
+              {businessInfo.address}
+            </p>
+          )}
 
           {waitingCount !== null && (
             <div className="mt-4 mx-auto inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-bold border border-primary/20">
