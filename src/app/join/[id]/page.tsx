@@ -18,11 +18,29 @@ import { useAuth } from "@/context/auth-context";
 import Logo from "@/components/Logo";
 import Link from "next/link";
 
+interface BusinessInfo {
+  name: string | null;
+  business_name: string | null;
+  address: string | null;
+  phone: string | null;
+  bio: string | null;
+  website: string | null;
+}
+
+interface QueueData {
+  id: string;
+  name: string;
+  status: 'active' | 'closed';
+  require_party_size?: boolean;
+  business_id: string;
+  users?: BusinessInfo;
+}
+
 export default function JoinQueuePage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const [queue, setQueue] = useState<any>(null);
+  const [queue, setQueue] = useState<QueueData | null>(null);
   const [mode, setMode] = useState<'join' | 'schedule'>('join');
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -174,7 +192,7 @@ export default function JoinQueuePage() {
   }
 
   async function scheduleAppointment() {
-    if (!scheduledDate) return;
+    if (!scheduledDate || !queue) return;
     setJoining(true);
     try {
       let hourStr = parseInt(scheduledHour);

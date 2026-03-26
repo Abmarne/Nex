@@ -1,0 +1,37 @@
+name: PR Integrity Validator
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-linked-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Linked Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || "";
+            const issueRegex = /(closes|fixes|resolves)\s+#\d+/i;
+            
+            if (!issueRegex.test(body)) {
+              core.setFailed("PR must link to an issue in the description (e.g., 'Closes #123') to satisfy enterprise requirements.");
+            } else {
+              console.log("Found linked issue in PR description. Integrity check passed.");
+            }
+
+  summarize-pr:
+    name: AI Summary & Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Install CodiumAI PR-Agent
+        uses: Codium-ai/pr-agent@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # In an enterprise setting, you would add an OPENAI_API_KEY or GEMINI_API_KEY here 
+          # to enable full AI review. For now, it will use the default open-source engine.
