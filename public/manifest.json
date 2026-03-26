@@ -1,16 +1,25 @@
 {
-  "name": "Nex",
+  "name": "Nex | Digital Queue Protocol",
   "short_name": "Nex",
-  "description": "Smart real-time queue management for businesses",
+  "description": "High-performance real-time waiting terminal for modern businesses.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0070f3",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "categories": ["business", "productivity", "utilities"]
 }

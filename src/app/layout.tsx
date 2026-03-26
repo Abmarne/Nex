@@ -29,7 +29,12 @@ export const metadata: Metadata = {
     "digital tokens", 
     "clinic queue", 
     "salon waitlist",
-    "retail queue manager"
+    "retail queue manager",
+    "customer flow management",
+    "online waitlist software",
+    "queue management solutions",
+    "saas queue system",
+    "automated waitlist"
   ],
   authors: [{ name: "Nex Team" }],
   creator: "Nex",
@@ -37,17 +42,28 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     title: "Nex | Next-Gen Queue Management",
     description: "The ultimate zero-friction waiting line manager. Real-time digital tokens for modern businesses.",
     url: "https://nex-lovat.vercel.app",
-    siteName: "Nex",
+    siteName: "Nex Queue Management",
     images: [
       {
         url: "/icon.png",
         width: 1200,
         height: 630,
-        alt: "Nex - Digital Queue Platform",
+        alt: "Nex - Digital Queue Platform Dashboard",
       },
     ],
     locale: "en_US",
@@ -56,7 +72,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Nex | High-Performance Wait List Software",
-    description: "The ultimate zero-friction digital queue manager.",
+    description: "The ultimate zero-friction digital queue manager. Built for scale.",
+    creator: "@nexplatform",
     images: ["/icon.png"],
   },
   verification: {
@@ -64,14 +81,21 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
+    icon: [
+      { url: "/icon.png" },
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon.png" },
+    ],
   },
   appleWebApp: {
     title: "Nex",
     statusBarStyle: "default",
     capable: true,
   },
+  category: "technology",
+  classification: "Business Software",
 };
 
 import { AuthProvider } from "@/context/auth-context";
