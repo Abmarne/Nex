@@ -1,4 +1,4 @@
-# Nex (QueueEase)
+# Nex 
 
 A modern, enterprise-grade Next.js application for business queue management.
 
