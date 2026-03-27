@@ -82,3 +82,31 @@ To learn more about Next.js, take a look at the following resources:
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new). Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Contributing
+
+We welcome contributions to make Nex even better! Whether it's reporting a bug, suggesting a new feature, or submitting a pull request, your help is highly appreciated.
+
+### How to Contribute
+
+1. **Fork the repository** to your own GitHub account.
+2. **Create a new branch** for your feature, enhancement, or bug fix:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. **Make your changes** and commit them with clear, descriptive messages:
+   ```bash
+   git commit -m "feat: add new feature description"
+   ```
+4. **Push your changes** to your fork:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+5. **Open a Pull Request** against the `main` branch of the original repository. Please provide a detailed description of your changes in the PR.
+
+### Coding Guidelines
+
+- **Style:** Maintain the modern, enterprise-grade design syntax already established in the project.
+- **Code Quality:** Ensure your code is clean, well-commented, and formatted consistently.
+- **Testing:** Test your changes thoroughly locally before submitting a PR.
+- **Issues:** If you plan on making major changes, please open an issue first to discuss your proposed changes with the maintainers.
