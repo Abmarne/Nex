@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, CheckCircle2, XCircle, Share2, ArrowLeft, ClipboardList, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { Users, CheckCircle2, XCircle, Share2, ArrowLeft, ClipboardList, ChevronDown, ChevronUp, Zap, Copy, Check } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Link from "next/link";
 
@@ -45,6 +45,14 @@ export default function QueueDashboardPage() {
   const [manualPartySize, setManualPartySize] = useState("1");
   const [addingManual, setAddingManual] = useState(false);
   const [expandedToken, setExpandedToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    const joinUrl = `${window.location.origin}/join/${id}`;
+    navigator.clipboard.writeText(joinUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     if (id) {
@@ -218,7 +226,16 @@ export default function QueueDashboardPage() {
             <div className="p-4 bg-white rounded-2xl shadow-xl border border-white/20">
               <QRCodeSVG value={joinUrl} size={200} />
             </div>
-            <p className="text-xs font-mono bg-black/60 text-muted-foreground p-3 rounded-xl break-all border border-white/5 w-full text-center">{joinUrl}</p>
+            <Button 
+              variant="outline" 
+              onClick={copyToClipboard}
+              className="w-full gap-2 border-white/10 bg-black/50 hover:bg-white/5 hover:border-white/20 transition-all rounded-xl h-12 text-muted-foreground hover:text-white"
+            >
+              {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+              <span className="font-mono text-xs truncate max-w-[200px] sm:max-w-xs text-left overflow-hidden relative">
+                {copied ? "Copied to clipboard!" : joinUrl}
+              </span>
+            </Button>
           </CardContent>
         </Card>
       )}

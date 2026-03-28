@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
 import { loginAction, registerAction } from "@/app/login/actions";
+import { Eye, EyeOff } from "lucide-react";
 
 type AuthFormProps = {
   mode: "login" | "register";
@@ -18,6 +19,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const getPasswordRequirements = (pass: string) => {
     return {
@@ -53,11 +55,15 @@ export function AuthForm({ mode }: AuthFormProps) {
         const result = await registerAction(formData);
         if (result?.error) {
            setError(result.error);
+        } else {
+           window.location.href = "/dashboard";
         }
       } else {
         const result = await loginAction(formData);
         if (result?.error) {
            setError(result.error);
+        } else {
+           window.location.href = "/dashboard";
         }
       }
     } catch (err: any) {
@@ -117,15 +123,25 @@ export function AuthForm({ mode }: AuthFormProps) {
                 </Link>
               )}
             </div>
-            <Input 
-              id="password" 
-              type="password" 
-              placeholder="••••••••"
-              className="h-12 bg-black/50 border-white/10 text-white rounded-xl focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:border-primary/50 shadow-inner px-4 font-medium placeholder:text-muted-foreground/40 transition-all"
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
-            />
+            <div className="relative">
+              <Input 
+                id="password" 
+                type={showPassword ? "text" : "password"} 
+                placeholder="••••••••"
+                className="h-12 bg-black/50 border-white/10 text-white rounded-xl focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:border-primary/50 shadow-inner px-4 font-medium placeholder:text-muted-foreground/40 transition-all pr-12"
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                required 
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-white transition-colors focus:outline-none focus:text-primary"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
             {mode === "register" && password.length > 0 && (
               <div className="grid grid-cols-2 gap-2 mt-3 animate-in fade-in slide-in-from-top-1 duration-300">
                 <Requirement 

@@ -77,8 +77,13 @@ export default function AnalyticsPage() {
         }
       });
 
-      const peakHourStr = busiestHour !== -1 
-        ? `${busiestHour}:00 - ${busiestHour + 1}:00`
+      const formatHour = (h: number) => {
+        const period = h >= 12 ? "PM" : "AM";
+        const hour12 = h % 12 === 0 ? 12 : h % 12;
+        return `${hour12}:00 ${period}`;
+      };
+      const peakHourStr = busiestHour !== -1
+        ? `${formatHour(busiestHour)} – ${formatHour((busiestHour + 1) % 24)}`
         : "N/A";
       
       setStats({

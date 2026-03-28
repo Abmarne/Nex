@@ -18,8 +18,7 @@ export async function loginAction(formData: FormData) {
     return { error: error.message };
   }
 
-  // Next.js redirect must be thrown, so we do it outside try/catch or after error check
-  redirect("/dashboard");
+  return { success: true };
 }
 
 export async function registerAction(formData: FormData) {
@@ -44,5 +43,5 @@ export async function registerAction(formData: FormData) {
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  return { success: true };
 }
