@@ -9,6 +9,7 @@ import { Clock, Users, ArrowLeft, RefreshCw, Zap, Moon } from "lucide-react";
 import ArcadeGame from "@/components/ArcadeGame";
 import PreboardingForm from "@/components/PreboardingForm";
 import Logo from "@/components/Logo";
+import { toast } from "sonner";
 
 export default function TokenStatusPage() {
   const { tokenId } = useParams();
@@ -51,7 +52,7 @@ export default function TokenStatusPage() {
 
   async function requestNotificationPermission() {
     if (!('Notification' in window)) {
-      alert("This browser does not support desktop notification");
+      toast.error("Notifications not supported", { description: "Your browser doesn't support push notifications." });
       return;
     }
 
@@ -117,23 +118,30 @@ export default function TokenStatusPage() {
   }
 
   async function leaveQueue() {
-    if (!confirm("Are you sure you want to leave the queue? Your position will be lost.")) return;
-    
-    try {
-      const { error } = await supabase
-        .from("tokens")
-        .update({ status: "left" })
-        .eq("id", tokenId);
+    toast.warning("Leave the queue?", {
+      description: "Your position will be permanently lost.",
+      action: {
+        label: "Yes, Leave",
+        onClick: async () => {
+          try {
+            const { error } = await supabase
+              .from("tokens")
+              .update({ status: "left" })
+              .eq("id", tokenId);
 
-      if (error) throw error;
-      
-      // Clear session when leaving
-      localStorage.removeItem(`queue_token_${token.queue_id}`);
-      
-      router.push("/");
-    } catch (error) {
-      console.error("Error leaving queue:", error);
-    }
+            if (error) throw error;
+
+            localStorage.removeItem(`queue_token_${token.queue_id}`);
+            router.push("/");
+          } catch (error) {
+            console.error("Error leaving queue:", error);
+            toast.error("Failed to leave the queue.");
+          }
+        },
+      },
+      cancel: { label: "Stay", onClick: () => {} },
+      duration: 8000,
+    });
   }
 
   async function snoozeQueue() {

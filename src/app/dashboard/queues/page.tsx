@@ -5,8 +5,9 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ListOrdered, Play, Square, ExternalLink, Trash2, X } from "lucide-react";
+import { Plus, ListOrdered, Play, Square, ExternalLink, Trash2, X, Users } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 type Queue = {
   id: string;
@@ -28,6 +29,7 @@ export default function QueuesPage() {
   const { user } = useAuth();
   const [queues, setQueues] = useState<Queue[]>([]);
   const [loading, setLoading] = useState(true);
+  const [waitingCounts, setWaitingCounts] = useState<Record<string, number>>({});
   const [isCreating, setIsCreating] = useState(false);
   const [newQueueName, setNewQueueName] = useState("");
   const [arcadeEnabled, setArcadeEnabled] = useState(false);
@@ -57,7 +59,24 @@ export default function QueuesPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setQueues(data || []);
+      const fetchedQueues = data || [];
+      setQueues(fetchedQueues);
+
+      // Fetch waiting counts for all queues
+      if (fetchedQueues.length > 0) {
+        const counts: Record<string, number> = {};
+        await Promise.all(
+          fetchedQueues.map(async (q) => {
+            const { count } = await supabase
+              .from("tokens")
+              .select("*", { count: "exact", head: true })
+              .eq("queue_id", q.id)
+              .eq("status", "waiting");
+            counts[q.id] = count || 0;
+          })
+        );
+        setWaitingCounts(counts);
+      }
     } catch (error) {
       console.error("Error fetching queues:", error);
     } finally {
@@ -103,8 +122,10 @@ export default function QueuesPage() {
       setCharityLink("");
       setCharityAmount(50);
       setIsCreating(false);
+      toast.success("Queue created!", { description: `"${newQueueName}" is now live.` });
     } catch (error) {
       console.error("Error creating queue:", error);
+      toast.error("Failed to create queue.");
     }
   }
 
@@ -118,8 +139,10 @@ export default function QueuesPage() {
 
       if (error) throw error;
       setQueues(queues.map(q => q.id === id ? { ...q, status: newStatus as any } : q));
+      toast.success(newStatus === "active" ? "Queue opened." : "Queue closed.");
     } catch (error) {
       console.error("Error updating queue status:", error);
+      toast.error("Failed to update queue status.");
     }
   }
 
@@ -134,10 +157,10 @@ export default function QueuesPage() {
       if (error) throw error;
 
       setQueues(prev => prev.filter(q => q.id !== id));
-      alert("Queue deleted successfully!");
+      toast.success("Queue deleted.");
     } catch (error: any) {
       console.error("Error deleting queue:", error);
-      alert(`Failed to delete queue: ${error.message || "Unknown error"}`);
+      toast.error("Failed to delete queue.", { description: error.message });
     } finally {
       setIsDeleting(false);
       setConfirmDeleteId(null);
@@ -399,10 +422,16 @@ export default function QueuesPage() {
                   </div>
                   <div>
                     <h3 className="font-black text-2xl text-white tracking-tight">{queue.name}</h3>
-                    <div className="flex gap-2 items-center mt-1">
+                    <div className="flex gap-2 items-center mt-1 flex-wrap">
                       <p className={`text-[10px] uppercase tracking-widest font-black px-2 py-0.5 rounded-sm ${queue.status === 'active' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'}`}>
                         {queue.status}
                       </p>
+                      {queue.status === 'active' && (
+                        <span className="flex items-center gap-1 text-[10px] bg-white/5 border border-white/10 text-white/70 px-2 py-0.5 rounded-sm font-black uppercase tracking-widest">
+                          <Users size={10} />
+                          {waitingCounts[queue.id] ?? "—"} waiting
+                        </span>
+                      )}
                       {queue.arcade_enabled && <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-sm font-black uppercase tracking-widest">Minigame</span>}
                       {queue.preboarding_enabled && <span className="text-[10px] bg-secondary/20 text-secondary px-2 py-0.5 rounded-sm font-black uppercase tracking-widest">Forms</span>}
                       {queue.charity_fastpass_enabled && <span className="text-[10px] bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-sm font-black uppercase tracking-widest">Good</span>}

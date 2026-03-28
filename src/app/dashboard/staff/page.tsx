@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Users, UserPlus, Shield, Trash2, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 type StaffMember = {
   id: string;
@@ -66,7 +67,7 @@ export default function StaffManagementPage() {
         .single();
 
       if (findError || !targetUser) {
-        alert("Customer/User not found with this email. They must register first.");
+        toast.error("User not found.", { description: "They must register on Nex first." });
         return;
       }
 
@@ -83,17 +84,16 @@ export default function StaffManagementPage() {
 
       setNewStaffEmail("");
       fetchStaff();
+      toast.success("Staff member added!");
     } catch (error: any) {
       console.error("Error adding staff:", error);
-      alert("Failed to add staff member. They might already be added.");
+      toast.error("Failed to add staff.", { description: "They might already be added." });
     } finally {
       setAdding(false);
     }
   }
 
   async function removeStaff(id: string) {
-    if (!confirm("Are you sure you want to remove this staff member?")) return;
-    
     try {
       const { error } = await supabase
         .from("business_staff")
@@ -102,8 +102,10 @@ export default function StaffManagementPage() {
 
       if (error) throw error;
       setStaff(prev => prev.filter(s => s.id !== id));
+      toast.success("Staff member removed.");
     } catch (error) {
       console.error("Error removing staff:", error);
+      toast.error("Failed to remove staff member.");
     }
   }
 

@@ -99,6 +99,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/context/auth-context";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -113,6 +114,19 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            classNames: {
+              toast: "bg-[#1a1a1a] border border-white/10 text-white shadow-xl rounded-xl",
+              description: "text-muted-foreground",
+              actionButton: "bg-primary text-white",
+              cancelButton: "bg-white/10 text-white",
+              error: "border-red-500/30 bg-red-500/10 text-red-400",
+              success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+            },
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `

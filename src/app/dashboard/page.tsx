@@ -8,8 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Plus, Users, CheckCircle2, ListOrdered } from "lucide-react";
 import Link from "next/link";
 
+function StatSkeleton() {
+  return (
+    <Card className="border-white/5 bg-[#121212]/80 backdrop-blur-md rounded-3xl overflow-hidden relative shadow-lg animate-pulse">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="h-3 w-24 bg-white/10 rounded-full" />
+        <div className="h-5 w-5 bg-white/10 rounded" />
+      </CardHeader>
+      <CardContent className="pt-4">
+        <div className="h-12 w-20 bg-white/10 rounded-xl" />
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [statsLoading, setStatsLoading] = useState(true);
   const [stats, setStats] = useState({
     activeQueues: 0,
     waitingTotal: 0,
@@ -23,33 +38,37 @@ export default function DashboardPage() {
   }, [user]);
 
   async function fetchStats() {
-    // This would be more complex in a real app, but for MVP:
-    const { data: queues } = await supabase
-      .from("queues")
-      .select("id")
-      .eq("business_id", user?.id)
-      .eq("status", "active");
+    setStatsLoading(true);
+    try {
+      const { data: queues } = await supabase
+        .from("queues")
+        .select("id")
+        .eq("business_id", user?.id)
+        .eq("status", "active");
 
-    const activeQueueIds = queues?.map(q => q.id) || [];
+      const activeQueueIds = queues?.map(q => q.id) || [];
 
-    const { count: waitingCount } = await supabase
-      .from("tokens")
-      .select("*", { count: 'exact', head: true })
-      .in('queue_id', activeQueueIds)
-      .eq('status', 'waiting');
+      const { count: waitingCount } = await supabase
+        .from("tokens")
+        .select("*", { count: 'exact', head: true })
+        .in('queue_id', activeQueueIds)
+        .eq('status', 'waiting');
 
-    const { count: servedTodayCount } = await supabase
-      .from("tokens")
-      .select("*", { count: 'exact', head: true })
-      .in('queue_id', activeQueueIds)
-      .eq('status', 'served')
-      .gte('created_at', new Date().toISOString().split('T')[0]);
+      const { count: servedTodayCount } = await supabase
+        .from("tokens")
+        .select("*", { count: 'exact', head: true })
+        .in('queue_id', activeQueueIds)
+        .eq('status', 'served')
+        .gte('created_at', new Date().toISOString().split('T')[0]);
 
-    setStats({
-      activeQueues: activeQueueIds.length,
-      waitingTotal: waitingCount || 0,
-      servedToday: servedTodayCount || 0,
-    });
+      setStats({
+        activeQueues: activeQueueIds.length,
+        waitingTotal: waitingCount || 0,
+        servedToday: servedTodayCount || 0,
+      });
+    } finally {
+      setStatsLoading(false);
+    }
   }
 
   return (
@@ -73,6 +92,13 @@ export default function DashboardPage() {
 
 
       {/* KPI Bento Grid */}
+      {statsLoading ? (
+        <div className="grid gap-6 md:grid-cols-3">
+          <StatSkeleton />
+          <StatSkeleton />
+          <StatSkeleton />
+        </div>
+      ) : (
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="border-white/5 bg-[#121212]/80 backdrop-blur-md rounded-3xl overflow-hidden relative group shadow-lg">
           <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-20 group-hover:opacity-50 transition-opacity" />
@@ -110,6 +136,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-500"><CheckCircle2 size={100} /></div>
         </Card>
       </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-12 auto-rows-fr">
         {/* Recent Activity */}

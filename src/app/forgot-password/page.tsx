@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,29 +8,29 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import Logo from "@/components/Logo";
 import Link from "next/link";
 import { ArrowLeft, Mail, Sparkles } from "lucide-react";
+import { forgotPasswordAction } from "./actions";
+import { toast } from "sonner";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccess(false);
 
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) throw error;
+    const formData = new FormData();
+    formData.append("email", email);
+
+    const result = await forgotPasswordAction(formData);
+
+    setLoading(false);
+
+    if (result?.error) {
+      toast.error("Failed to send reset link", { description: result.error });
+    } else {
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -81,12 +80,6 @@ export default function ForgotPasswordPage() {
                   <Sparkles size={20} className="text-emerald-500" />
                 </div>
                 <span>Transmission Sent.<br/>Check your encryption matrix (inbox).</span>
-              </div>
-            )}
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] uppercase font-bold tracking-widest p-3 rounded-lg text-center animate-in slide-in-from-top-2">
-                {error}
               </div>
             )}
           </CardContent>

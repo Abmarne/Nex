@@ -1,8 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LogOut, LayoutDashboard, ListOrdered, BarChart3, Menu, X, Calendar, Users, Gift } from "lucide-react";
 import { useState } from "react";
@@ -15,11 +14,24 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, profile, loading, signOut } = useAuth();
-  const router = useRouter();
+  const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Exact match for /dashboard, prefix match for sub-routes
+  const isActive = (href: string) =>
+    href === "/dashboard" ? pathname === href : pathname.startsWith(href);
+
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-full border-t-2 border-r-2 border-primary animate-spin" />
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/50 animate-pulse">
+            Initializing...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -72,16 +84,31 @@ export default function DashboardLayout({
         <div className="px-6 pb-6 pt-2">
           <p className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground/50 pl-2 mb-4 mt-2">Navigation</p>
           <nav className="flex flex-col space-y-1">
-            {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} onClick={() => setIsSidebarOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start gap-4 h-12 text-muted-foreground hover:text-white hover:bg-white/[0.04] transition-all rounded-xl border border-transparent hover:border-white/5 font-bold tracking-wide">
-                  <div className="bg-white/5 p-1.5 rounded-lg text-primary">
-                    <link.icon size={16} />
-                  </div>
-                  {link.label}
-                </Button>
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <Link key={link.href} href={link.href} onClick={() => setIsSidebarOpen(false)}>
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-4 h-12 transition-all rounded-xl border font-bold tracking-wide relative overflow-hidden
+                      ${
+                        active
+                          ? "text-white bg-primary/10 border-primary/20 shadow-[inset_0_0_20px_rgba(0,112,243,0.05)]"
+                          : "text-muted-foreground hover:text-white hover:bg-white/[0.04] border-transparent hover:border-white/5"
+                      }
+                    `}
+                  >
+                    {active && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-primary rounded-r-full shadow-[0_0_8px_var(--color-primary)]" />
+                    )}
+                    <div className={`p-1.5 rounded-lg transition-colors ${active ? "bg-primary/20 text-primary" : "bg-white/5 text-primary"}`}>
+                      <link.icon size={16} />
+                    </div>
+                    {link.label}
+                  </Button>
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
