@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { loginAction, registerAction } from "@/app/login/actions";
 
 type AuthFormProps = {
   mode: "login" | "register";
@@ -19,7 +18,6 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const getPasswordRequirements = (pass: string) => {
     return {
@@ -38,6 +36,13 @@ export function AuthForm({ mode }: AuthFormProps) {
     setLoading(true);
     setError(null);
 
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
+    if (mode === "register") {
+      formData.append("name", name);
+    }
+
     try {
       if (mode === "register") {
         if (!isPasswordStrong) {
@@ -45,28 +50,18 @@ export function AuthForm({ mode }: AuthFormProps) {
           setLoading(false);
           return;
         }
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name,
-              role: "business",
-            },
-          },
-        });
-        if (error) throw error;
-        router.push("/dashboard");
+        const result = await registerAction(formData);
+        if (result?.error) {
+           setError(result.error);
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        router.push("/dashboard");
+        const result = await loginAction(formData);
+        if (result?.error) {
+           setError(result.error);
+        }
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
