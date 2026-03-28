@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/auth-context";
 import Logo from "@/components/Logo";
 import Link from "next/link";
+import { joinQueueAction, scheduleAppointmentAction } from "../actions";
 
 interface BusinessInfo {
   name: string | null;
@@ -141,86 +142,56 @@ export default function JoinQueuePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (mode === 'join') {
-      await joinQueue();
-    } else {
-      await scheduleAppointment();
-    }
-  }
-
-  async function joinQueue() {
     setJoining(true);
+    
     try {
-      let customerId = user?.id;
+      if (mode === 'join') {
+        const formData = new FormData();
+        formData.append("queueId", id as string);
+        if (user?.id) formData.append("customerId", user.id);
+        formData.append("guestName", name);
+        formData.append("customerEmail", email);
+        formData.append("partySize", partySize);
 
-      const { data: lastToken } = await supabase
-        .from("tokens")
-        .select("position")
-        .eq("queue_id", id)
-        .order("position", { ascending: false })
-        .limit(1);
+        const result = await joinQueueAction(formData);
+        
+        if (result.success && result.token) {
+           localStorage.setItem(`queue_token_${id}`, result.token.id);
+           router.push(`/status/${result.token.id}`);
+        } else {
+           alert(result.error || "Failed to join queue.");
+        }
+      } else {
+        if (!scheduledDate || !queue) {
+           setJoining(false);
+           return;
+        }
+        
+        let hourStr = parseInt(scheduledHour);
+        if (scheduledAmPm === "PM" && hourStr !== 12) hourStr += 12;
+        if (scheduledAmPm === "AM" && hourStr === 12) hourStr = 0;
+        const combinedDate = new Date(`${scheduledDate}T${hourStr.toString().padStart(2, '0')}:${scheduledMinute}:00`);
 
-      const nextPosition = (lastToken?.[0]?.position || 0) + 1;
+        const formData = new FormData();
+        formData.append("queueId", id as string);
+        formData.append("businessId", queue.business_id);
+        if (user?.id) formData.append("customerId", user.id);
+        formData.append("guestName", name);
+        formData.append("customerEmail", email);
+        formData.append("partySize", partySize);
+        formData.append("scheduledAt", combinedDate.toISOString());
 
-      const { data: token, error } = await supabase
-        .from("tokens")
-        .insert([
-          {
-            queue_id: id,
-            customer_id: customerId || null,
-            guest_name: name,
-            customer_email: email || null,
-            party_size: parseInt(partySize) || 1,
-            position: nextPosition,
-            status: "waiting",
-          },
-        ])
-        .select()
-        .single();
+        const result = await scheduleAppointmentAction(formData);
 
-      if (error) throw error;
-      
-      // Save session for recovery
-      localStorage.setItem(`queue_token_${id}`, token.id);
-      
-      router.push(`/status/${token.id}`);
+        if (result.success && result.appointment) {
+           router.push(`/appointment/${result.appointment.id}`);
+        } else {
+           alert(result.error || "Failed to schedule appointment.");
+        }
+      }
     } catch (error) {
-      console.error("Error joining queue:", error);
-    } finally {
-      setJoining(false);
-    }
-  }
-
-  async function scheduleAppointment() {
-    if (!scheduledDate || !queue) return;
-    setJoining(true);
-    try {
-      let hourStr = parseInt(scheduledHour);
-      if (scheduledAmPm === "PM" && hourStr !== 12) hourStr += 12;
-      if (scheduledAmPm === "AM" && hourStr === 12) hourStr = 0;
-      
-      const combinedDate = new Date(`${scheduledDate}T${hourStr.toString().padStart(2, '0')}:${scheduledMinute}:00`);
-
-      const { data, error } = await supabase
-        .from("appointments")
-        .insert([{
-          business_id: queue.business_id,
-          queue_id: id,
-          customer_id: user?.id || null,
-          guest_name: name,
-          guest_email: email || null,
-          party_size: parseInt(partySize) || 1,
-          scheduled_at: combinedDate.toISOString(),
-          status: 'scheduled'
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      router.push(`/appointment/${data.id}`);
-    } catch (error) {
-      console.error("Error scheduling appointment:", error);
-      alert("Failed to schedule appointment.");
+      console.error("Action error:", error);
+      alert("An unexpected error occurred.");
     } finally {
       setJoining(false);
     }

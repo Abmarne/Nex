@@ -18,12 +18,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
