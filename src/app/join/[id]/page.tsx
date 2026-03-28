@@ -18,6 +18,7 @@ import { useAuth } from "@/context/auth-context";
 import Logo from "@/components/Logo";
 import Link from "next/link";
 import { joinQueueAction, scheduleAppointmentAction } from "../actions";
+import { Copy, Check } from "lucide-react";
 
 interface BusinessInfo {
   name: string | null;
@@ -53,6 +54,13 @@ export default function JoinQueuePage() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [waitingCount, setWaitingCount] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     if (id) {
@@ -213,7 +221,19 @@ export default function JoinQueuePage() {
         <Logo size={40} />
       </Link>
       <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary">
-        <CardHeader className="text-center pb-2">
+        <CardHeader className="text-center pb-2 relative pt-10">
+          <div className="absolute right-4 top-4 z-10">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={copyToClipboard}
+              className="h-8 gap-1.5 rounded-full px-3 text-xs font-bold shadow-sm transition-all hover:scale-105 active:scale-95"
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copied!" : "Share Link"}
+            </Button>
+          </div>
           <CardTitle className="text-3xl font-black">{queue.name}</CardTitle>
           <CardDescription className="text-base font-medium">
             by {businessInfo?.business_name || businessInfo?.name || "Business"}
