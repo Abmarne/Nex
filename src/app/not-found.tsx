@@ -20,7 +20,7 @@ export default function NotFound() {
           </div>
           <h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-white leading-tight">Route Not Found</h1>
           <p className="text-muted-foreground font-medium text-lg leading-relaxed lowercase tracking-wide max-w-xs mx-auto">
-            The path you've explored doesn't exist in our hub. Let's get you back on track.
+            The path you&apos;ve explored doesn&apos;t exist in our hub. Let&apos;s get you back on track.
           </p>
         </div>
 

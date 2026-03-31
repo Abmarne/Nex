@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -27,22 +27,17 @@ export default function StaffManagementPage() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchStaff();
-    }
-  }, [user]);
-
-  async function fetchStaff() {
+  const fetchStaff = useCallback(async () => {
     setLoading(true);
     try {
+      if (!user?.id) return;
       const { data, error } = await supabase
         .from("business_staff")
         .select(`
           *,
           users:staff_id(name, email)
         `)
-        .eq("business_id", user?.id);
+        .eq("business_id", user.id);
 
       if (error) throw error;
       setStaff(data as unknown as StaffMember[] || []);
@@ -51,7 +46,13 @@ export default function StaffManagementPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchStaff();
+    }
+  }, [user, fetchStaff]);
 
   async function addStaffMember(e: React.FormEvent) {
     e.preventDefault();
@@ -71,22 +72,24 @@ export default function StaffManagementPage() {
         return;
       }
 
-      // 2. Add as staff
-      const { error: addError } = await supabase
-        .from("business_staff")
-        .insert([{
-          business_id: user?.id,
-          staff_id: targetUser.id,
-          role: 'staff'
-        }]);
+        // 2. Add as staff
+        if (!user?.id) throw new Error("Authentication required");
+        const { error: addError } = await supabase
+          .from("business_staff")
+          .insert([{
+            business_id: user.id,
+            staff_id: targetUser.id,
+            role: 'staff'
+          }]);
 
       if (addError) throw addError;
 
       setNewStaffEmail("");
       fetchStaff();
       toast.success("Staff member added!");
-    } catch (error: any) {
-      console.error("Error adding staff:", error);
+    } catch (error) {
+      const err = error as Error;
+      console.error("Error adding staff:", err);
       toast.error("Failed to add staff.", { description: "They might already be added." });
     } finally {
       setAdding(false);
@@ -124,7 +127,7 @@ export default function StaffManagementPage() {
             <UserPlus size={20} className="text-primary" />
             Add Staff Member
           </CardTitle>
-          <CardDescription>Enter the email address of the person you'd like to invite as staff.</CardDescription>
+          <CardDescription>Enter the email address of the person you&apos;d like to invite as staff.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={addStaffMember} className="flex gap-2">

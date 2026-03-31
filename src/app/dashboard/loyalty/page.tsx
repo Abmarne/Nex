@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth-context";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Award, Trophy, User, Gift, Star } from "lucide-react";
 
 type ArcadeScore = {
@@ -32,15 +32,10 @@ export default function LoyaltyProgramPage() {
   const [arcadeLeaderboard, setArcadeLeaderboard] = useState<ArcadeScore[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      fetchLoyaltyData();
-    }
-  }, [user]);
-
-  async function fetchLoyaltyData() {
+  const fetchLoyaltyData = useCallback(async () => {
     setLoading(true);
     try {
+      if (!user?.id) return;
       // 1. Fetch Loyalty Members
       const { data: loyaltyData, error: loyaltyError } = await supabase
         .from("loyalty_points")
@@ -48,7 +43,7 @@ export default function LoyaltyProgramPage() {
           *,
           users:customer_id(name, email)
         `)
-        .eq("business_id", user?.id)
+        .eq("business_id", user.id)
         .order("points", { ascending: false });
 
       if (loyaltyError) throw loyaltyError;
@@ -58,7 +53,7 @@ export default function LoyaltyProgramPage() {
       const { data: queues } = await supabase
         .from("queues")
         .select("id")
-        .eq("business_id", user?.id);
+        .eq("business_id", user.id);
       
       const queueIds = queues?.map(q => q.id) || [];
       
@@ -74,14 +69,20 @@ export default function LoyaltyProgramPage() {
           .limit(10);
         
         if (arcadeError) throw arcadeError;
-        setArcadeLeaderboard(arcadeData as any[] || []);
+        setArcadeLeaderboard(arcadeData as unknown as ArcadeScore[] || []);
       }
     } catch (error) {
       console.error("Error fetching loyalty data:", error);
     } finally {
       setLoading(false);
     }
-  }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchLoyaltyData();
+    }
+  }, [user, fetchLoyaltyData]);
 
   if (loading) return <div className="p-8">Loading loyalty data...</div>;
 

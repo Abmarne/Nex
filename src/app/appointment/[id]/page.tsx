@@ -1,19 +1,74 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Users, ArrowLeft, CalendarCheck, Info } from "lucide-react";
+import { Users, ArrowLeft, CalendarCheck, Info } from "lucide-react";
+
+import { Appointment, Queue } from "@/types/database";
+
+interface QueueWithUser extends Queue {
+  users?: { name: string | null };
+}
+
+interface AppointmentWithQueue extends Appointment {
+  queues?: QueueWithUser;
+}
 
 export default function AppointmentStatusPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
   const router = useRouter();
-  const [appointment, setAppointment] = useState<any>(null);
-  const [queue, setQueue] = useState<any>(null);
+  const [appointment, setAppointment] = useState<AppointmentWithQueue | null>(null);
+  const [queue, setQueue] = useState<QueueWithUser | null>(null);
   const [waitingCount, setWaitingCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchQueueStats = useCallback(async (queueId?: string) => {
+    const qId = queueId || appointment?.queue_id;
+    if (!qId) return;
+
+    try {
+      const { count } = await supabase
+        .from("tokens")
+        .select("*", { count: 'exact', head: true })
+        .eq("queue_id", qId)
+        .eq("status", "waiting");
+
+      setWaitingCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching queue stats:", error);
+    }
+  }, [appointment?.queue_id]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const { data: apptData, error: apptError } = await supabase
+        .from("appointments")
+        .select(`
+          *,
+          queues (
+            *,
+            users (name)
+          )
+        `)
+        .eq("id", id)
+        .single();
+
+      if (apptError) throw apptError;
+      const typedAppt = apptData as unknown as AppointmentWithQueue;
+      setAppointment(typedAppt);
+      setQueue(typedAppt.queues || null);
+      
+      await fetchQueueStats(typedAppt.queue_id ?? undefined);
+    } catch (error) {
+      console.error("Error fetching appointment data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, fetchQueueStats]);
 
   useEffect(() => {
     if (id) {
@@ -35,50 +90,7 @@ export default function AppointmentStatusPage() {
         supabase.removeChannel(channel);
       };
     }
-  }, [id]);
-
-  async function fetchData() {
-    try {
-      const { data: apptData, error: apptError } = await supabase
-        .from("appointments")
-        .select(`
-          *,
-          queues (
-            *,
-            users (name)
-          )
-        `)
-        .eq("id", id)
-        .single();
-
-      if (apptError) throw apptError;
-      setAppointment(apptData);
-      setQueue(apptData.queues);
-      
-      await fetchQueueStats(apptData.queue_id);
-    } catch (error) {
-      console.error("Error fetching appointment data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function fetchQueueStats(queueId?: string) {
-    const qId = queueId || appointment?.queue_id;
-    if (!qId) return;
-
-    try {
-      const { count } = await supabase
-        .from("tokens")
-        .select("*", { count: 'exact', head: true })
-        .eq("queue_id", qId)
-        .eq("status", "waiting");
-
-      setWaitingCount(count || 0);
-    } catch (error) {
-      console.error("Error fetching queue stats:", error);
-    }
-  }
+  }, [id, fetchData, fetchQueueStats]);
 
   async function cancelAppointment() {
     if (!confirm("Are you sure you want to cancel your appointment?")) return;

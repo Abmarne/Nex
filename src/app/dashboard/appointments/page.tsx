@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, User, Clock, CheckCircle2, XCircle, Plus, LayoutList } from "lucide-react";
+import { Calendar, Clock, CheckCircle2, XCircle, Plus, LayoutList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 type Appointment = {
@@ -37,19 +37,13 @@ export default function AppointmentsPage() {
   const [selectedQueueId, setSelectedQueueId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchAppointments();
-      fetchQueues();
-    }
-  }, [user]);
-
-  async function fetchQueues() {
+  const fetchQueues = useCallback(async () => {
     try {
+      if (!user?.id) return;
       const { data, error } = await supabase
         .from("queues")
         .select("id, name")
-        .eq("business_id", user?.id);
+        .eq("business_id", user.id);
       
       if (error) throw error;
       setQueues(data || []);
@@ -57,18 +51,19 @@ export default function AppointmentsPage() {
     } catch (error) {
       console.error("Error fetching queues:", error);
     }
-  }
+  }, [user?.id]);
 
-  async function fetchAppointments() {
+  const fetchAppointments = useCallback(async () => {
     setLoading(true);
     try {
+      if (!user?.id) return;
       const { data, error } = await supabase
         .from("appointments")
         .select(`
           *,
           queues(name)
         `)
-        .eq("business_id", user?.id)
+        .eq("business_id", user.id)
         .order("scheduled_at", { ascending: true });
 
       if (error) throw error;
@@ -78,7 +73,14 @@ export default function AppointmentsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchAppointments();
+      fetchQueues();
+    }
+  }, [user, fetchAppointments, fetchQueues]);
 
   async function updateStatus(id: string, newStatus: 'checked_in' | 'cancelled') {
     try {
@@ -139,10 +141,11 @@ export default function AppointmentsPage() {
 
     setSubmitting(true);
     try {
+      if (!user?.id) throw new Error("User not authenticated");
       const { data, error } = await supabase
         .from("appointments")
         .insert([{
-          business_id: user?.id,
+          business_id: user.id,
           queue_id: selectedQueueId,
           guest_name: guestName,
           guest_email: guestEmail || null,
@@ -163,9 +166,10 @@ export default function AppointmentsPage() {
       setGuestEmail("");
       setScheduledAt("");
       alert("Appointment created successfully!");
-    } catch (error: any) {
-      console.error("Error creating appointment:", error);
-      alert("Error: " + error.message);
+    } catch (error) {
+      const errObj = error as Error;
+      console.error("Error creating appointment:", errObj);
+      alert("Error: " + errObj.message);
     } finally {
       setSubmitting(false);
     }
@@ -338,7 +342,7 @@ export default function AppointmentsPage() {
             <div className="space-y-4">
               <h3 className="text-xl font-bold border-b pb-2 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-500"></span> 
-                Today's Appointments
+                Today&apos;s Appointments
               </h3>
               <div className="grid gap-4">
                 {appointments.filter(a => new Date(a.scheduled_at).toDateString() === new Date().toDateString()).length === 0 ? (

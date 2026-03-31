@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Card,
@@ -33,7 +33,7 @@ interface QueueData {
   id: string;
   name: string;
   status: 'active' | 'closed';
-  require_party_size?: boolean;
+  require_party_size?: boolean | null;
   business_id: string;
   users?: BusinessInfo;
 }
@@ -62,41 +62,8 @@ export default function JoinQueuePage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  useEffect(() => {
-    if (id) {
-      // Check for existing session for this queue
-      const existingTokenId = localStorage.getItem(`queue_token_${id}`);
-      if (existingTokenId) {
-        // Verify token is still active before redirecting
-        verifyExistingToken(existingTokenId);
-      } else {
-        fetchQueue();
-      }
-    }
-  }, [id]);
-
-  async function verifyExistingToken(tokenId: string) {
-    try {
-      const { data, error } = await supabase
-        .from("tokens")
-        .select("id, status")
-        .eq("id", tokenId)
-        .single();
-      
-      if (!error && data && data.status === 'waiting') {
-        router.push(`/status/${data.id}`);
-        return;
-      }
-      
-      // If token is invalid or already served, clear and show join page
-      localStorage.removeItem(`queue_token_${id}`);
-      fetchQueue();
-    } catch (err) {
-      fetchQueue();
-    }
-  }
-
-  async function fetchQueue() {
+  const fetchQueue = useCallback(async () => {
+    if (!id) return;
     try {
       const { data, error } = await supabase
         .from("queues")
@@ -111,16 +78,16 @@ export default function JoinQueuePage() {
             website
           )
         `)
-        .eq("id", id)
+        .eq("id", id as string)
         .single();
 
       if (error) throw error;
-      setQueue(data);
+      setQueue(data as unknown as QueueData);
 
       const { count, error: countError } = await supabase
         .from("tokens")
         .select("*", { count: 'exact', head: true })
-        .eq("queue_id", id)
+        .eq("queue_id", id as string)
         .eq("status", "waiting");
         
       if (!countError) {
@@ -131,7 +98,42 @@ export default function JoinQueuePage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
+
+  const verifyExistingToken = useCallback(async (tokenId: string) => {
+    if (!id) return;
+    try {
+      const { data, error } = await supabase
+        .from("tokens")
+        .select("id, status")
+        .eq("id", tokenId)
+        .single();
+      
+      if (!error && data && data.status === 'waiting') {
+        router.push(`/status/${data.id}`);
+        return;
+      }
+      
+      // If token is invalid or already served, clear and show join page
+      localStorage.removeItem(`queue_token_${id as string}`);
+      fetchQueue();
+    } catch {
+      fetchQueue();
+    }
+  }, [id, router, fetchQueue]);
+
+  useEffect(() => {
+    if (id) {
+      // Check for existing session for this queue
+      const existingTokenId = localStorage.getItem(`queue_token_${id}`);
+      if (existingTokenId) {
+        // Verify token is still active before redirecting
+        verifyExistingToken(existingTokenId);
+      } else {
+        fetchQueue();
+      }
+    }
+  }, [id, fetchQueue, verifyExistingToken]);
 
   const businessInfo = queue?.users;
   const jsonLd = queue ? {

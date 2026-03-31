@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -31,19 +31,13 @@ export default function DashboardPage() {
     servedToday: 0,
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchStats();
-    }
-  }, [user]);
-
-  async function fetchStats() {
+  const fetchStats = useCallback(async () => {
     setStatsLoading(true);
     try {
       const { data: queues } = await supabase
         .from("queues")
         .select("id")
-        .eq("business_id", user?.id)
+        .eq("business_id", user?.id ?? '')
         .eq("status", "active");
 
       const activeQueueIds = queues?.map(q => q.id) || [];
@@ -69,7 +63,13 @@ export default function DashboardPage() {
     } finally {
       setStatsLoading(false);
     }
-  }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchStats();
+    }
+  }, [user, fetchStats]);
 
   return (
     <div className="space-y-8 relative pb-24 border-none">

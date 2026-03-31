@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/context/auth-context";
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, ListOrdered, Play, Square, ExternalLink, Trash2, X, Users } from "lucide-react";
@@ -18,7 +18,7 @@ type Queue = {
   arcade_reward: string | null;
   require_party_size: boolean;
   preboarding_enabled: boolean;
-  preboarding_fields: any[];
+  preboarding_fields: { id: string; label: string; type: string; options?: string[]; required?: boolean }[];
   charity_fastpass_enabled: boolean;
   charity_name: string | null;
   charity_link: string | null;
@@ -44,22 +44,17 @@ export default function QueuesPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchQueues();
-    }
-  }, [user]);
-
-  async function fetchQueues() {
+  const fetchQueues = useCallback(async () => {
     try {
+      if (!user?.id) return;
       const { data, error } = await supabase
         .from("queues")
         .select("*")
-        .eq("business_id", user?.id)
+        .eq("business_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      const fetchedQueues = data || [];
+      const fetchedQueues = (data as unknown as Queue[]) || [];
       setQueues(fetchedQueues);
 
       // Fetch waiting counts for all queues
@@ -82,18 +77,25 @@ export default function QueuesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchQueues();
+    }
+  }, [user, fetchQueues]);
 
   async function createQueue(e: React.FormEvent) {
     e.preventDefault();
     if (!newQueueName.trim()) return;
 
     try {
+      if (!user?.id) throw new Error("Not authenticated");
       const { data, error } = await supabase
         .from("queues")
         .insert([
           { 
-            business_id: user?.id, 
+            business_id: user.id, 
             name: newQueueName, 
             status: "active",
             arcade_enabled: arcadeEnabled,
@@ -111,7 +113,7 @@ export default function QueuesPage() {
         .single();
 
       if (error) throw error;
-      setQueues([data, ...queues]);
+      setQueues([data as unknown as Queue, ...queues]);
       setNewQueueName("");
       setArcadeEnabled(false);
       setArcadeReward("");
@@ -138,7 +140,7 @@ export default function QueuesPage() {
         .eq("id", id);
 
       if (error) throw error;
-      setQueues(queues.map(q => q.id === id ? { ...q, status: newStatus as any } : q));
+      setQueues(queues.map(q => q.id === id ? { ...q, status: newStatus as "active" | "closed" } : q));
       toast.success(newStatus === "active" ? "Queue opened." : "Queue closed.");
     } catch (error) {
       console.error("Error updating queue status:", error);
@@ -158,9 +160,10 @@ export default function QueuesPage() {
 
       setQueues(prev => prev.filter(q => q.id !== id));
       toast.success("Queue deleted.");
-    } catch (error: any) {
-      console.error("Error deleting queue:", error);
-      toast.error("Failed to delete queue.", { description: error.message });
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      console.error("Error deleting queue:", err);
+      toast.error("Failed to delete queue.", { description: err.message });
     } finally {
       setIsDeleting(false);
       setConfirmDeleteId(null);
@@ -244,7 +247,7 @@ export default function QueuesPage() {
                       value={arcadeReward}
                       onChange={(e) => setArcadeReward(e.target.value)}
                     />
-                    <p className="text-[10px] text-primary/60 mt-2 font-medium">Customers can play "Speed Tapper" while waiting.</p>
+                    <p className="text-[10px] text-primary/60 mt-2 font-medium">Customers can play &quot;Speed Tapper&quot; while waiting.</p>
                   </div>
                 )}
               </div>

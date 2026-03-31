@@ -66,10 +66,11 @@ export async function joinQueueAction(formData: FormData) {
     return { success: true, token };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const zodErr = error as any;
-      console.error("Validation Error:", zodErr.errors);
+      console.error("Validation Error:", error.issues);
       return { success: false, error: "Invalid data submitted." };
     }
+
+
     console.error("Error joining queue via action:", error);
     return { success: false, error: "Server encountered an error while joining." };
   }
@@ -110,9 +111,9 @@ export async function scheduleAppointmentAction(formData: FormData) {
     return { success: true, appointment: data };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const zodErr = error as any;
-      return { success: false, error: zodErr.errors[0]?.message || "Invalid input" };
+      return { success: false, error: error.issues[0]?.message || "Invalid input" };
     }
+
     console.error("Error scheduling appointment:", error);
     return { success: false, error: "Failed to schedule appointment." };
   }

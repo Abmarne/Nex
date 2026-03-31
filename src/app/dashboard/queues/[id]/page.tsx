@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,8 @@ type Queue = {
 };
 
 export default function QueueDashboardPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
   const [queue, setQueue] = useState<Queue | null>(null);
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +54,48 @@ export default function QueueDashboardPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const fetchTokens = useCallback(async () => {
+    try {
+      // Fetch token with associated user data if it exists
+      const { data, error } = await supabase
+        .from("tokens")
+        .select(`
+          *,
+          users:customer_id(name)
+        `)
+        .eq("queue_id", id)
+        .in("status", ["waiting", "served"])
+        .order("position", { ascending: true });
+
+      if (error) throw error;
+      console.log("Tokens fetched for dashboard:", data?.[0]); 
+      setTokens(data as unknown as Token[] || []);
+    } catch (error) {
+      console.error("Error fetching tokens:", error);
+    }
+  }, [id]);
+
+  const fetchQueueData = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (!id) return;
+      const { data: queueData, error: queueError } = await supabase
+        .from("queues")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (queueError) throw queueError;
+      setQueue(queueData as unknown as Queue);
+
+      await fetchTokens();
+    } catch (error) {
+      console.error("Error fetching queue data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, fetchTokens]);
 
   useEffect(() => {
     if (id) {
@@ -74,54 +117,10 @@ export default function QueueDashboardPage() {
         supabase.removeChannel(channel);
       };
     }
-  }, [id]);
-
-  async function fetchQueueData() {
-    setLoading(true);
-    try {
-      const { data: queueData, error: queueError } = await supabase
-        .from("queues")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (queueError) throw queueError;
-      setQueue(queueData);
-
-      await fetchTokens();
-    } catch (error) {
-      console.error("Error fetching queue data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function fetchTokens() {
-    try {
-      // Fetch token with associated user data if it exists
-      const { data, error } = await supabase
-        .from("tokens")
-        .select(`
-          *,
-          users:customer_id(name)
-        `)
-        .eq("queue_id", id)
-        .in("status", ["waiting", "served"])
-        .order("position", { ascending: true });
-
-      if (error) throw error;
-      console.log("Tokens fetched for dashboard:", data?.[0]); 
-      setTokens(data || []);
-    } catch (error) {
-      console.error("Error fetching tokens:", error);
-    }
-  }
+  }, [id, fetchQueueData, fetchTokens]);
 
   async function updateTokenStatus(tokenId: string, status: 'served' | 'left') {
     try {
-      // Get the token's position before updating
-      const currentToken = tokens.find(t => t.id === tokenId);
-      
       const { error } = await supabase
         .from("tokens")
         .update({ 
@@ -170,7 +169,9 @@ export default function QueueDashboardPage() {
       setManualName("");
       setManualPartySize("1");
       // Real-time subscription will handle the UI update, but we can do it optimistically too
-      setTokens(prev => [...prev, data]);
+      if (data) {
+        setTokens(prev => [...prev, data as unknown as Token]);
+      }
     } catch (error) {
       console.error("Error adding manual customer:", error);
     } finally {
@@ -296,9 +297,7 @@ export default function QueueDashboardPage() {
                         <div className="flex flex-col">
                           <span className="text-base sm:text-lg font-bold text-white tracking-tight leading-tight">
                             {(() => {
-                              const profileName = Array.isArray(token.users) 
-                                ? token.users[0]?.name 
-                                : (token.users as any)?.name;
+                              const profileName = token.users?.name;
                               return token.guest_name || profileName || "Guest Customer";
                             })()}
                           </span>
@@ -368,7 +367,7 @@ export default function QueueDashboardPage() {
                  {waitingTokens[0] ? `#${waitingTokens[0].position}` : "—"}
                </span>
                <p className="text-base text-white/70 mt-4 font-medium tracking-tight">
-                 {waitingTokens[0] ? (waitingTokens[0].guest_name || (waitingTokens[0].users as any)?.name || "Guest Customer") : "Queue is Empty"}
+                 {waitingTokens[0] ? (waitingTokens[0].guest_name || waitingTokens[0].users?.name || "Guest Customer") : "Queue is Empty"}
                </p>
                {waitingTokens[0] && (
                  <Button className="mt-6 w-full rounded-xl font-bold tracking-wide bg-white text-black hover:bg-white/90" size="lg" onClick={() => updateTokenStatus(waitingTokens[0].id, 'served')}>
@@ -390,7 +389,7 @@ export default function QueueDashboardPage() {
                     <div className="flex items-center gap-4">
                       <span className="text-xs font-black text-white/30 group-hover:text-white/50 transition-colors">#{token.position}</span>
                       <span className="text-sm font-medium text-white/70 line-clamp-1 group-hover:text-white transition-colors">
-                        {token.guest_name || (token.users as any)?.name || "Guest"}
+                        {token.guest_name || token.users?.name || "Guest"}
                       </span>
                     </div>
                   </div>

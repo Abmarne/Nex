@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { ArcadeScore } from "@/types/database";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -21,7 +22,17 @@ export default function ArcadeGame({
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
   const [gameOver, setGameOver] = useState(false);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<ArcadeScore[]>([]);
+
+  const fetchLeaderboard = useCallback(async () => {
+    const { data } = await supabase
+      .from("arcade_scores")
+      .select("*")
+      .eq("queue_id", queueId)
+      .order("score", { ascending: false })
+      .limit(5);
+    if (data) setLeaderboard(data);
+  }, [queueId]);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -36,44 +47,9 @@ export default function ArcadeGame({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queueId]);
+  }, [queueId, fetchLeaderboard]);
 
-  useEffect(() => {
-    let timer: any;
-    if (playing && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-    } else if (playing && timeLeft === 0) {
-      endGame();
-    }
-    return () => clearInterval(timer);
-  }, [playing, timeLeft]);
-
-  async function fetchLeaderboard() {
-    const { data } = await supabase
-      .from("arcade_scores")
-      .select("*")
-      .eq("queue_id", queueId)
-      .order("score", { ascending: false })
-      .limit(5);
-    if (data) setLeaderboard(data);
-  }
-
-  function startGame() {
-    setScore(0);
-    setTimeLeft(10);
-    setPlaying(true);
-    setGameOver(false);
-  }
-
-  function handleTap() {
-    if (playing && timeLeft > 0) {
-      setScore(prev => prev + 1);
-    }
-  }
-
-  async function endGame() {
+  const endGame = useCallback(async () => {
     setPlaying(false);
     setGameOver(true);
     
@@ -85,6 +61,33 @@ export default function ArcadeGame({
         guest_name: guestName || "Guest",
         score: score
       }]);
+    }
+  }, [queueId, score, tokenId, guestName]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    if (playing && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    } else if (playing && timeLeft === 0) {
+      endGame();
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [playing, timeLeft, endGame]);
+
+  function startGame() {
+    setScore(0);
+    setTimeLeft(10);
+    setPlaying(true);
+    setGameOver(false);
+  }
+
+  function handleTap() {
+    if (playing && timeLeft > 0) {
+      setScore(prev => prev + 1);
     }
   }
 

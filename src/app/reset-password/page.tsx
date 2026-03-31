@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import Logo from "@/components/Logo";
 import Link from "next/link";
-import { ShieldAlert, Sparkles, CheckCircle2 } from "lucide-react";
+import { ShieldAlert, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function ResetPasswordPage() {
@@ -54,8 +54,9 @@ export default function ResetPasswordPage() {
       setTimeout(() => {
         router.push("/login");
       }, 3000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(error.message);
     } finally {
       setLoading(false);
     }
